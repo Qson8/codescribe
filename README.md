@@ -16,11 +16,11 @@
 
 <br/>
 
-<img src="docs/screenshots/codesucker-v0.3.0-file-tree.png" alt="CodeSucker v0.3.0 — 真实目录树、目录级选择、全局反选、文件类型统计与固定操作区" width="920" />
+<img src="docs/screenshots/codesucker-v0.4.1-file-tree.png" alt="CodeSucker v0.4.1 — 项目文件目录树、关键字实时筛选、文件排序与类型统计" width="920" />
 
 <br/>
 
-<img src="docs/screenshots/codesucker-v0.3.0-page-preview.png" alt="CodeSucker v0.3.0 — 源程序分页预览、前后段分界与页码导航" width="920" />
+<img src="docs/screenshots/codesucker-v0.4.1-page-preview.png" alt="CodeSucker v0.4.1 — 源程序分页预览、完整首尾标签、前后段分界与页码导航" width="920" />
 
 </div>
 
