@@ -1,11 +1,11 @@
 const TRUSTED_EXTERNAL_URLS = new Set([
-  'https://github.com/fanbuz',
-  'https://github.com/fanbuz/codesucker',
-  'https://github.com/fanbuz/codesucker/blob/main/LICENSE',
+  'https://github.com/Qson8',
+  'https://github.com/Qson8/codescribe',
+  'https://github.com/Qson8/codescribe/blob/main/LICENSE',
   'https://github.com/fanbuz/mochi-issue-flow-skill',
 ]);
 
-const RELEASE_TAG_PATH_PREFIX = '/fanbuz/codesucker/releases/tag/';
+const RELEASE_TAG_PATH_PREFIX = '/Qson8/codescribe/releases/tag/';
 
 export function isTrustedReleaseUrl(input: string): boolean {
   try {

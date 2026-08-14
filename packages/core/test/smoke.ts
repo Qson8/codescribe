@@ -1,6 +1,6 @@
 /**
  * 冒烟测试：构造一个混合语言的临时项目 → 跑完整流水线 → 校验硬性规范。
- * 运行：npm test -w @codesucker/core（Node 22+，或 npx tsx test/smoke.ts）
+ * 运行：npm test -w @codescribe/core（Node 22+，或 npx tsx test/smoke.ts）
  */
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import JSZip from 'jszip';
 import { annotate, defaultCleanOptions, DEFAULT_EXCLUDES, DEFAULT_EXTENSIONS, discover, processFiles, renderDocx, renderTxt, sortFiles, wrapLine } from '../src/index.ts';
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'codesucker-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'codescribe-'));
 
 // —— 构造测试项目 ——
 const mk = (rel: string, content: string) => {

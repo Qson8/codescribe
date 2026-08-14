@@ -11,7 +11,7 @@ import { windowChromeOptions } from './window-chrome';
 
 let win: BrowserWindow | null = null;
 
-app.setName('CodeSucker');
+app.setName('CodeScribe');
 
 function createWindow() {
   const stateFile = path.join(app.getPath('userData'), WINDOW_STATE_CONFIG_NAME);

@@ -7,7 +7,7 @@ import {
   type FileEntry, type ProjectConfig,
 } from '../src/index.ts';
 
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codesucker-empty-result-'));
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codescribe-empty-result-'));
 const clean = defaultCleanOptions();
 const config: ProjectConfig = {
   root,

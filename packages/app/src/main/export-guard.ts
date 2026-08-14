@@ -1,4 +1,4 @@
-import type { Selection } from '@codesucker/core';
+import type { Selection } from '@codescribe/core';
 
 type ExportableSelection = Pick<Selection, 'pages' | 'totalLines' | 'pickedLines'>;
 

@@ -1,7 +1,7 @@
 import { isTrustedReleaseUrl } from './external-url';
 import type { UpdateCheckResult } from '../shared/update-types';
 
-export const LATEST_RELEASE_API = 'https://api.github.com/repos/fanbuz/codesucker/releases/latest';
+export const LATEST_RELEASE_API = 'https://api.github.com/repos/Qson8/codescribe/releases/latest';
 export const UPDATE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
 
@@ -168,7 +168,7 @@ export async function checkLatestRelease(
       headers: {
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': `CodeSucker/${normalizedCurrent}`,
+        'User-Agent': `CodeScribe/${normalizedCurrent}`,
       },
       cache: 'no-store',
       signal: controller.signal,

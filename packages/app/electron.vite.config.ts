@@ -7,7 +7,7 @@ const fromConfig = (relativePath: string) => fileURLToPath(new URL(relativePath,
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin({ exclude: ['@codesucker/core'] })],
+    plugins: [externalizeDepsPlugin({ exclude: ['@codescribe/core'] })],
     build: {
       rollupOptions: {
         input: {

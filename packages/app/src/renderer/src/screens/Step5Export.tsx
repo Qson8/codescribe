@@ -200,7 +200,7 @@ export default function Step5Export() {
             <div style={{ fontSize: 12.5, color: 'var(--text2)', marginTop: 8, fontFamily: 'var(--mono)', wordBreak: 'break-all', lineHeight: 1.6, background: 'var(--panel2)', border: '1px solid var(--border2)', borderRadius: 8, padding: '9px 12px' }}>
               {(r.docx ?? r.txt ?? '').split('/').pop()}<br />
               <span style={{ color: 'var(--text3)' }}>{r.pages} 页 · {r.lines.toLocaleString()} 行{r.size > 0 && ` · ${Math.round(r.size / 1024)} KB`}</span>
-              <br /><span style={{ color: 'var(--text3)', fontSize: 11 }}>CodeSucker {r.appVersion} · 规则 {r.rulesVersion}</span>
+              <br /><span style={{ color: 'var(--text3)', fontSize: 11 }}>CodeScribe {r.appVersion} · 规则 {r.rulesVersion}</span>
               {r.errors.length > 0 && <><br /><span style={{ color: 'var(--orange)', fontSize: 11 }}>已跳过 {r.errors.length} 个处理失败文件</span></>}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>

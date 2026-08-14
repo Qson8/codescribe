@@ -18,7 +18,7 @@ const invocationRoot = process.env.INIT_CWD ?? process.cwd();
 const [javaKotlinRoot, pythonRoot, typescriptRoot] = process.argv.slice(2)
   .map((value) => path.resolve(invocationRoot, value));
 assert.ok(javaKotlinRoot && pythonRoot && typescriptRoot, [
-  '用法：npm run test:real-projects -w @codesucker/core --',
+  '用法：npm run test:real-projects -w @codescribe/core --',
   '<java-kotlin-project> <python-project> <typescript-project>',
 ].join(' '));
 
@@ -26,7 +26,7 @@ for (const root of [javaKotlinRoot, pythonRoot, typescriptRoot]) {
   assert.ok(fs.statSync(root).isDirectory(), `项目目录不存在：${root}`);
 }
 
-const gbkProbe = path.join(pythonRoot, 'codesucker_gbk_probe.py');
+const gbkProbe = path.join(pythonRoot, 'codescribe_gbk_probe.py');
 fs.writeFileSync(gbkProbe, iconv.encode([
   '# -*- coding: gbk -*-',
   '项目名称 = "真实项目中文编码验收"',
@@ -37,7 +37,7 @@ const decodedProbe = readSource(gbkProbe);
 assert.match(decodedProbe.text, /GBK 中文读取正常/);
 assert.ok(!/UTF-8|ASCII/i.test(decodedProbe.encoding), 'GBK 探针不应按 UTF-8 解码');
 
-const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'codesucker-real-projects-'));
+const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'codescribe-real-projects-'));
 
 async function validate(spec: ProjectSpec) {
   const files = sortFiles(discover(spec.root, DEFAULT_EXTENSIONS, DEFAULT_EXCLUDES), 'entry');

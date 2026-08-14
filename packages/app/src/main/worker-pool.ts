@@ -1,6 +1,6 @@
 import * as os from 'node:os';
 import { Worker, type WorkerOptions } from 'node:worker_threads';
-import { abortError } from '@codesucker/core';
+import { abortError } from '@codescribe/core';
 
 interface WorkerEnvelope<T> {
   id: number;

@@ -6,7 +6,7 @@ import {
   captureProjectRoot, resolveProjectFile, resolveRecentExportFile, validateProjectRoot,
 } from '../src/main/project-file.ts';
 
-const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'codesucker-project-file-'));
+const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'codescribe-project-file-'));
 const root = path.join(sandbox, 'project');
 const outside = path.join(sandbox, 'outside.ts');
 fs.mkdirSync(path.join(root, 'src'), { recursive: true });

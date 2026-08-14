@@ -8,7 +8,7 @@ import {
   readSource, renderDocx, sortFiles,
 } from '../src/index.ts';
 
-const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codesucker-release-matrix-'));
+const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codescribe-release-matrix-'));
 
 function writeProjectFile(project: string, relativePath: string, content: string | Buffer) {
   const target = path.join(workspace, project, relativePath);
@@ -48,7 +48,7 @@ async function validateProject(project: string, title: string) {
   const result = processFiles(files, {
     root,
     title,
-    owner: 'CodeSucker Test',
+    owner: 'CodeScribe Test',
     extensions: DEFAULT_EXTENSIONS,
     excludes: DEFAULT_EXCLUDES,
     sortMode: 'entry',

@@ -4,10 +4,10 @@ import * as path from 'node:path';
 import {
   CONFIG_SCHEMA_VERSION, DEFAULT_EXCLUDES, DEFAULT_EXTENSIONS, RULES_VERSION,
   discoverAsync, processFilesAsync, renderTxtAsync, sortFiles,
-} from '@codesucker/core';
+} from '@codescribe/core';
 import type {
   CleanedFile, CleanOptions, FileCandidate, FileEntry, PipelineProgress, ProjectConfig,
-} from '@codesucker/core';
+} from '@codescribe/core';
 import { JobController, type JobHandle, type JobKind } from './job-controller';
 import { assertExportableSelection } from './export-guard';
 import { validateDroppedDirectory } from './drop-path';
@@ -133,12 +133,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function loadProjectConfig(root: string): { config: Record<string, unknown> | null; warning: string | null } {
-  const configFile = path.join(root, '.codesucker.json');
+  const configFile = path.join(root, '.codescribe.json');
   if (!fs.existsSync(configFile)) return { config: null, warning: null };
 
   try {
     const parsed: unknown = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!isRecord(parsed)) return { config: null, warning: '项目配置格式无效，已忽略 .codesucker.json' };
+    if (!isRecord(parsed)) return { config: null, warning: '项目配置格式无效，已忽略 .codescribe.json' };
 
     const schema = parsed.schemaVersion;
     if (schema === undefined) {
@@ -150,12 +150,12 @@ function loadProjectConfig(root: string): { config: Record<string, unknown> | nu
     if ((schema as number) > CONFIG_SCHEMA_VERSION) {
       return {
         config: null,
-        warning: `项目配置来自更新版本（schema ${schema}），当前仅支持 ${CONFIG_SCHEMA_VERSION}，请升级 CodeSucker`,
+        warning: `项目配置来自更新版本（schema ${schema}），当前仅支持 ${CONFIG_SCHEMA_VERSION}，请升级 CodeScribe`,
       };
     }
     return { config: parsed, warning: null };
   } catch {
-    return { config: null, warning: '项目配置无法解析，已忽略 .codesucker.json' };
+    return { config: null, warning: '项目配置无法解析，已忽略 .codescribe.json' };
   }
 }
 
@@ -464,7 +464,7 @@ export function registerPipelineIpc() {
       appVersion: app.getVersion(),
       rulesVersion: RULES_VERSION,
     };
-    fs.writeFileSync(path.join(root, '.codesucker.json'), `${JSON.stringify(persisted, null, 2)}\n`);
+    fs.writeFileSync(path.join(root, '.codescribe.json'), `${JSON.stringify(persisted, null, 2)}\n`);
     return true;
   });
 }

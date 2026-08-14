@@ -7,7 +7,7 @@ import {
   DEFAULT_EXCLUDES, DEFAULT_EXTENSIONS, defaultCleanOptions,
   discover, discoverAsync, processFiles, processFilesAsync, renderDocx, sortFiles,
   type CleanedFile, type FileCandidate, type FileEntry, type ProjectConfig,
-} from '@codesucker/core';
+} from '@codescribe/core';
 import { recommendedWorkerCount, WorkerPool } from '../src/main/worker-pool.ts';
 import type {
   PipelineWorkerRequest, PipelineWorkerResult, RenderWorkerRequest,
@@ -60,7 +60,7 @@ async function main() {
   if (!Number.isInteger(fileCount) || fileCount < 1) throw new Error('PERF_FILES 必须是正整数');
   if (!Number.isInteger(linesPerFile) || linesPerFile < 2) throw new Error('PERF_LINES 必须是大于 1 的整数');
 
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codesucker-performance-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codescribe-performance-'));
   const sourceRoot = path.join(root, 'src');
   fs.mkdirSync(sourceRoot, { recursive: true });
   const content = Array.from({ length: linesPerFile }, (_, index) =>

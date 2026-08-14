@@ -1,29 +1,29 @@
 {
-  "name": "codesucker",
-  "version": "0.4.4",
+  "name": "codescribe",
+  "version": "0.5.0-alpha",
   "private": true,
   "description": "软著代码抽取器 —— 离线生成符合软件著作权申报规范的源程序文档",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fanbuz/codesucker.git"
+    "url": "https://github.com/Qson8/codescribe.git"
   },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @codesucker/app",
-    "build": "npm run build -w @codesucker/core && npm run build -w @codesucker/app",
-    "test": "npm run test -w @codesucker/core && npm run test -w @codesucker/app",
-    "test:integration": "npm run test:workers -w @codesucker/app",
-    "perf": "npm run build && npm run perf -w @codesucker/app",
+    "dev": "npm run dev -w @codescribe/app",
+    "build": "npm run build -w @codescribe/core && npm run build -w @codescribe/app",
+    "test": "npm run test -w @codescribe/core && npm run test -w @codescribe/app",
+    "test:integration": "npm run test:workers -w @codescribe/app",
+    "perf": "npm run build && npm run perf -w @codescribe/app",
     "icons:generate": "node scripts/gen-icons.mjs",
     "icons:check": "node scripts/gen-icons.mjs --check",
     "licenses:generate": "node scripts/gen-third-party-notices.mjs",
     "licenses:check": "node scripts/gen-third-party-notices.mjs --check",
-    "dist:mac:x64": "npm run dist:mac:x64 -w @codesucker/app",
-    "dist:mac:arm64": "npm run dist:mac:arm64 -w @codesucker/app",
-    "dist:win:x64": "npm run dist:win:x64 -w @codesucker/app",
+    "dist:mac:x64": "npm run dist:mac:x64 -w @codescribe/app",
+    "dist:mac:arm64": "npm run dist:mac:arm64 -w @codescribe/app",
+    "dist:win:x64": "npm run dist:win:x64 -w @codescribe/app",
     "lockfile:check": "node scripts/check-lockfile-registry.mjs",
     "version:check": "node scripts/check-version.mjs",
     "version:set": "node scripts/set-version.mjs",

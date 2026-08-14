@@ -1,17 +1,17 @@
 {
-  "name": "@codesucker/app",
-  "version": "0.4.4",
+  "name": "@codescribe/app",
+  "version": "0.5.0-alpha",
   "private": true,
   "description": "离线生成符合软件著作权申报规范的源程序文档",
   "author": {
-    "name": "fanbuz",
-    "url": "https://github.com/fanbuz"
+    "name": "Qson8",
+    "url": "https://github.com/Qson8"
   },
   "license": "Apache-2.0",
   "main": "out/main/index.js",
   "build": {
-    "appId": "com.fanbuz.codesucker",
-    "productName": "CodeSucker",
+    "appId": "com.qson.codescribe",
+    "productName": "CodeScribe",
     "directories": {
       "buildResources": "build",
       "output": "release"
@@ -76,7 +76,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@codesucker/core": "*",
+    "@codescribe/core": "*",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

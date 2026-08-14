@@ -1,26 +1,26 @@
 <div align="center">
 
-<img src="packages/app/build/icon-256.png" width="110" alt="CodeSucker" />
+<img src="packages/app/build/icon-256.png" width="110" alt="CodeScribe" />
 
-# CodeSucker · 软著代码抽取器
+# 码著 CodeScribe · 软著代码著录器
 
-**把本地代码项目整理成便于软件著作权申报的源程序文档**
+**把本地代码项目整理成软件著作权申报所需的规范文档**
 
-全程离线 · 代码不出本机 · 规范内置 · 导出前自动校验
+代码不出本机 · 全程离线 · 规范内置 · 导出前自动校验
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/fanbuz/codesucker?display_name=tag&sort=semver&cacheSeconds=300)](https://github.com/fanbuz/codesucker/releases/latest)
+[![Release](https://img.shields.io/github/v/release/Qson8/codescribe?display_name=tag&sort=semver&cacheSeconds=300)](https://github.com/Qson8/codescribe/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)](#下载)
 [![Electron](https://img.shields.io/badge/Electron-43-47848F?logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#参与贡献)
 
 <br/>
 
-<img src="docs/screenshots/codesucker-v0.4.1-file-tree.png" alt="CodeSucker v0.4.1 — 项目文件目录树、关键字实时筛选、文件排序与类型统计" width="920" />
+<img src="docs/screenshots/codesucker-v0.4.1-file-tree.png" alt="码著 CodeScribe — 项目文件目录树、关键字实时筛选、文件排序与类型统计" width="920" />
 
 <br/>
 
-<img src="docs/screenshots/codesucker-v0.4.1-page-preview.png" alt="CodeSucker v0.4.1 — 源程序分页预览、完整首尾标签、前后段分界与页码导航" width="920" />
+<img src="docs/screenshots/codesucker-v0.4.1-page-preview.png" alt="码著 CodeScribe — 源程序分页预览、完整首尾标签、前后段分界与页码导航" width="920" />
 
 </div>
 
@@ -30,22 +30,22 @@
 
 申请软件著作权登记时，需要提交**源程序鉴别材料**：前后各连续 30 页、每页不少于 50 行、页眉标注软件全称+版本号……格式细节繁多，一处不合就被退回补正。手工整理一次要花几个小时，而市面上的工具要么只做简单拼接、要么依赖在线服务（代码泄露风险）。
 
-CodeSucker 把常见的软件著作权源程序材料规则整理成一套本地流水线：导入项目 → 五步向导 → 导出文档，并在导出前自动检查页数、行数、页眉和署名等风险，帮助减少手工整理错误与补正概率。
+码著 CodeScribe 把常见的软件著作权源程序材料规则整理成一套本地流水线：导入项目 → 五步向导 → 导出文档，并在导出前自动检查页数、行数、页眉和署名等风险，帮助减少手工整理错误与补正概率。
 
 > [!NOTE]
-> **这个项目如何被推进**
+> **项目演进**
 >
-> CodeSucker 的需求拆解、Issue 协作、阶段验收与交付回填，基于作者维护的 [Mochi Issue Flow](https://github.com/fanbuz/mochi-issue-flow-skill) 持续推进，让每一次开发都有清晰上下文和可追溯结果。
+> 码著 CodeScribe 由 [CodeSucker](https://github.com/fanbuz/codesucker)（Apache-2.0）演进而来，延续其离线优先、规范内置的架构设计，持续扩展软著全家桶能力。
 
 ## 下载
 
-前往 [GitHub Releases](https://github.com/fanbuz/codesucker/releases/latest) 下载与你的电脑匹配的安装包：
+前往 [GitHub Releases](https://github.com/Qson8/codescribe/releases/latest) 下载与你的电脑匹配的安装包：
 
 | 系统 | 架构 | 安装包 |
 |---|---|---|
-| macOS | Apple Silicon（M 系列芯片） | `CodeSucker-0.4.4-mac-arm64.dmg` |
-| macOS | Intel | `CodeSucker-0.4.4-mac-x64.dmg` |
-| Windows | x64 | `CodeSucker-0.4.4-win-x64.exe` |
+| macOS | Apple Silicon（M 系列芯片） | `CodeScribe-0.5.0-alpha-mac-arm64.dmg` |
+| macOS | Intel | `CodeScribe-0.5.0-alpha-mac-x64.dmg` |
+| Windows | x64 | `CodeScribe-0.5.0-alpha-win-x64.exe` |
 
 每个 Release 同时提供 `SHA256SUMS.txt`，可用于核对下载文件是否完整。
 
@@ -54,11 +54,11 @@ CodeSucker 把常见的软件著作权源程序材料规则整理成一套本地
 > 如果仍提示应用“已损坏”或需要“移到废纸篓”，请先确认安装包来自本项目 Release 并核对 SHA-256，然后在终端执行：
 >
 > ```bash
-> xattr -rd com.apple.quarantine /Applications/CodeSucker.app
-> open /Applications/CodeSucker.app
+> xattr -rd com.apple.quarantine /Applications/CodeScribe.app
+> open /Applications/CodeScribe.app
 > ```
 >
-> 以上命令只移除 `CodeSucker.app` 的下载隔离标记。不要对来源不明的应用执行该命令。
+> 以上命令只移除 `CodeScribe.app` 的下载隔离标记。不要对来源不明的应用执行该命令。
 
 ## 功能特性
 
@@ -73,11 +73,11 @@ CodeSucker 把常见的软件著作权源程序材料规则整理成一套本地
 - 🔔 **GitHub Release 更新检测** — 启动时自动查询最新正式版本，发现更新后可跳转 Release 下载页；失败不影响核心功能
 - 🔐 **源码处理完全离线** — 扫描、清洗、排版、导出零网络请求，源代码永远不离开本机；版本检测只请求公开版本元数据
 - 📌 **最近项目管理** — 常用项目可置顶，失效或不再使用的记录可单项或批量移除；移除记录不会删除磁盘项目
-- 💾 **配置与窗口持久化** — 项目选择与导出配置存入 `.codesucker.json`；应用级规则、最近项目和窗口状态安全保存在本机配置目录
+- 💾 **配置与窗口持久化** — 项目选择与导出配置存入 `.codescribe.json`；应用级规则、最近项目和窗口状态安全保存在本机配置目录
 
 ## 内置整理规则对照
 
-| 规范要求 | CodeSucker 的实现 |
+| 规范要求 | 码著 CodeScribe 的实现 |
 |---|---|
 | 前、后各连续 30 页，共 60 页 | 超 3000 行自动截取前 1500 + 后 1500 行 |
 | 每页不少于 50 行 | 内存中按 50 行切块 + 显式分页符，逐页保证 |
@@ -95,8 +95,8 @@ CodeSucker 把常见的软件著作权源程序材料规则整理成一套本地
 ### 开发运行
 
 ```bash
-git clone https://github.com/fanbuz/codesucker.git
-cd codesucker
+git clone https://github.com/Qson8/codescribe.git
+cd codescribe
 npm install
 npm run dev        # 启动桌面应用
 npm test           # core 流水线冒烟测试
@@ -118,9 +118,9 @@ packages/
             discover → clean → select → render → audit
   app/      Electron 43 + React 18 + zustand（electron-vite 构建）
 design/
-  prototype/  Claude Design 高保真原型（UI 实现基准）
+  prototype/ Claude Design 高保真原型（UI 实现基准）
   icon/       应用图标源文件（SVG）
-docs/       功能设计、技术选型与原型 prompt
+docs/       产品定位、改造计划、功能设计与技术选型
 scripts/    图标生成等工具脚本
 ```
 
@@ -154,12 +154,13 @@ scripts/    图标生成等工具脚本
 - [x] **v0.4.2**：应用标题栏、窗口、README 与 Windows 安装器品牌图标统一
 - [x] **v0.4.3**：安装包第三方许可证归属清单 · 依赖许可证自动审计与发布门禁
 - [x] **v0.4.4**：Windows 字体与四档缩放质量 · macOS 原生交通灯与窗口行为 · 申报文档 Word 一致性验证
+- [ ] **v0.5.0（码著 CodeScribe 改名版）**：品牌重命名 · 全局配置迁移 · 软著全家桶能力扩展
 - [ ] **后续版本**：多目录导入 · 成立日期输入 · 自定义脱敏规则 · 校验项一键修复 · Linux 安装包 · macOS 签名与公证 · 应用内下载/安装更新 · CLI 版本
 - [ ] **V3**：用户手册/设计说明书模板化生成 · 例外交存模式（黑斜线覆盖）· 多申报主体管理
 
 ## 版本与发布
 
-CodeSucker 使用 Semantic Versioning。根包、桌面应用、core 包和 lockfile 的产品版本由统一脚本同步；项目配置 schema 与合规规则版本独立演进。
+码著 CodeScribe 使用 Semantic Versioning。根包、桌面应用、core 包和 lockfile 的产品版本由统一脚本同步；项目配置 schema 与合规规则版本独立演进。
 
 ```bash
 npm run version:check                    # 检查所有版本字段一致
@@ -175,13 +176,8 @@ npm run verify                           # 发布前完整校验
 
 ## 许可证
 
-[Apache-2.0](LICENSE) © fanbuz
+[Apache-2.0](LICENSE) © Qson8
 
-本项目允许使用、修改、分发及闭源商用；再分发时须附带 Apache-2.0 许可证、保留适用的版权与 [NOTICE](NOTICE) 声明，并标明对文件所作的修改。
+本项目基于 [CodeSucker](https://github.com/fanbuz/codesucker)（© fanbuz，Apache-2.0）演进而来。本项目允许使用、修改、分发及闭源商用；再分发时须附带 Apache-2.0 许可证、保留适用的版权与 [NOTICE](NOTICE) 声明，并标明对文件所作的修改。
 
 安装包同时附带 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)，列出实际分发与打入应用 bundle 的第三方依赖、许可证选择和完整归属文本。
-
-## 延伸阅读与社区
-
-- [我为什么做 CodeSucker：一篇 X 长文](https://x.com/fanbuz_/status/2080468029784379675?s=20)，来自 [@fanbuz_](https://x.com/fanbuz_)
-- [LINUX DO](https://linux.do/)：社区精神——**真诚**、**友善**、**团结**、**专业**，共建你我引以为荣之社区。

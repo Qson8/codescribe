@@ -59,7 +59,7 @@ export default function App() {
       order: s.order, excludedRelPaths: s.files.filter((f) => !f.included).map((f) => f.relPath),
       clean: s.clean, fmtDocx: s.fmtDocx, fmtTxt: s.fmtTxt, outDir: s.outDir,
     });
-    toast('配置已保存到项目（.codesucker.json）');
+    toast('配置已保存到项目（.codescribe.json）');
   };
 
   const rescan = () => {
@@ -76,7 +76,7 @@ export default function App() {
       <div className="titlebar">
         <div className="titlebar-brand">
           <img className="titlebar-logo" src={APP_ICON_URL} alt="" aria-hidden="true" />
-          <div style={{ fontSize: 13, fontWeight: 600 }}>CodeSucker</div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>CodeScribe</div>
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>软著代码抽取器</div>
         </div>
         <div className="window-controls">

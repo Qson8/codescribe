@@ -367,7 +367,7 @@ export async function scanProject(root: string, intent: ScanIntent): Promise<voi
     if (result.errors.length > 0) toast(`${result.errors.length} 个文件扫描失败，已跳过`);
     else if (intent === 'rescan') toast('重新扫描完成，旧处理结果已失效');
     else if (result.savedConfigWarning) toast(result.savedConfigWarning);
-    else if (result.savedConfig) toast('已恢复项目配置（.codesucker.json）');
+    else if (result.savedConfig) toast('已恢复项目配置（.codescribe.json）');
   } catch (error) {
     const current = useStore.getState();
     if (current.activeJobId !== jobId) return;

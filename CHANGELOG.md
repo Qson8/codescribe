@@ -1,8 +1,15 @@
 # Changelog
 
-本文件记录 CodeSucker 的用户可见变化，格式遵循 Keep a Changelog，版本号遵循 Semantic Versioning。
+本文件记录 CodeScribe 的用户可见变化，格式遵循 Keep a Changelog，版本号遵循 Semantic Versioning。
 
 ## [Unreleased]
+
+## [0.5.0-alpha] - 2026-08-14
+
+### Changed
+
+- 品牌重命名为「码著 CodeScribe」（由 CodeSucker 演进），包名统一为 `@codescribe/*`，配置迁移至 `.codescribe.json`
+- 更新检测与外部链接指向 `Qson8/codescribe` 仓库
 
 ## [0.4.4] - 2026-07-31
 

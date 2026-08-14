@@ -1,6 +1,6 @@
 import type {
   AnnotatedLine, CleanedFile, CleanOptions, FileCandidate, FileEntry, Page, RenderOptions,
-} from '@codesucker/core';
+} from '@codescribe/core';
 
 export interface PreviewResult {
   file: string;

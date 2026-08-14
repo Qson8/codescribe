@@ -57,18 +57,18 @@ jobs:
           - label: macOS x64
             runner: macos-14
             script: dist:mac:x64
-            artifact: codesucker-macos-x64
-            path: packages/app/release/CodeSucker-*-mac-x64.dmg
+            artifact: codescribe-macos-x64
+            path: packages/app/release/CodeScribe-*-mac-x64.dmg
           - label: macOS arm64
             runner: macos-14
             script: dist:mac:arm64
-            artifact: codesucker-macos-arm64
-            path: packages/app/release/CodeSucker-*-mac-arm64.dmg
+            artifact: codescribe-macos-arm64
+            path: packages/app/release/CodeScribe-*-mac-arm64.dmg
           - label: Windows x64
             runner: windows-2022
             script: dist:win:x64
-            artifact: codesucker-windows-x64
-            path: packages/app/release/CodeSucker-*-win-x64.exe
+            artifact: codescribe-windows-x64
+            path: packages/app/release/CodeScribe-*-win-x64.exe
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
@@ -91,16 +91,16 @@ jobs:
         if: matrix.label == 'Windows x64'
         shell: pwsh
         run: |
-          $executable = Resolve-Path 'packages/app/release/win-unpacked/CodeSucker.exe'
+          $executable = Resolve-Path 'packages/app/release/win-unpacked/CodeScribe.exe'
           try {
             $process = Start-Process -FilePath $executable.Path -PassThru
             Start-Sleep -Seconds 5
             $process.Refresh()
             if ($process.HasExited) {
-              throw "CodeSucker exited during the startup smoke test with code $($process.ExitCode)"
+              throw "CodeScribe exited during the startup smoke test with code $($process.ExitCode)"
             }
           } finally {
-            Get-Process CodeSucker -ErrorAction SilentlyContinue | Stop-Process -Force
+            Get-Process CodeScribe -ErrorAction SilentlyContinue | Stop-Process -Force
           }
 
       - name: Upload installer
@@ -123,13 +123,13 @@ jobs:
       - name: Download installers
         uses: actions/download-artifact@v8
         with:
-          pattern: codesucker-*
+          pattern: codescribe-*
           path: release-assets
           merge-multiple: true
 
       - name: Generate SHA-256 checksums
         working-directory: release-assets
-        run: sha256sum CodeSucker-* > SHA256SUMS.txt
+        run: sha256sum CodeScribe-* > SHA256SUMS.txt
 
       - name: Create GitHub Release
         env:
@@ -144,6 +144,6 @@ jobs:
 
           gh release create "$GITHUB_REF_NAME" release-assets/* \
             --verify-tag \
-            --title "CodeSucker $GITHUB_REF_NAME" \
+            --title "CodeScribe $GITHUB_REF_NAME" \
             --generate-notes \
             "${release_options[@]}"

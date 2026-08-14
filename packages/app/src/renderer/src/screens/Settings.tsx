@@ -7,9 +7,9 @@ import {
 import { checkForUpdates, toast, useStore } from '../store';
 
 const LINKS = {
-  author: 'https://github.com/fanbuz',
-  repository: 'https://github.com/fanbuz/codesucker',
-  license: 'https://github.com/fanbuz/codesucker/blob/main/LICENSE',
+  author: 'https://github.com/Qson8',
+  repository: 'https://github.com/Qson8/codescribe',
+  license: 'https://github.com/Qson8/codescribe/blob/main/LICENSE',
   mochi: 'https://github.com/fanbuz/mochi-issue-flow-skill',
 } as const;
 
@@ -307,15 +307,15 @@ export default function Settings() {
                 隐私说明
               </div>
               <div className="settings-card__body">
-                CodeSucker 的扫描、清洗、脱敏、排版与导出全部在本机完成，您的源代码<span>永远不会离开这台电脑</span>。应用启动或您手动检查更新时，只向 GitHub 请求公开的 Release 版本元数据，不会发送项目路径、源码或配置。
+                CodeScribe 的扫描、清洗、脱敏、排版与导出全部在本机完成，您的源代码<span>永远不会离开这台电脑</span>。应用启动或您手动检查更新时，只向 GitHub 请求公开的 Release 版本元数据，不会发送项目路径、源码或配置。
               </div>
             </section>
 
-            <section className="about-card" aria-labelledby="about-codesucker">
+            <section className="about-card" aria-labelledby="about-codescribe">
               <div className="about-card__header">
                 <div style={{ minWidth: 0 }}>
                   <div className="about-card__eyebrow">ABOUT · 关于</div>
-                  <div id="about-codesucker" className="about-card__title">CodeSucker</div>
+                  <div id="about-codescribe" className="about-card__title">CodeScribe</div>
                 </div>
                 <span className="about-card__version">v{__APP_VERSION__}</span>
               </div>
@@ -346,12 +346,12 @@ export default function Settings() {
                 <div className="about-card__byline">
                   构建与维护者
                   <button type="button" className="about-card__author"
-                    onClick={() => window.cs.openExternal(LINKS.author)} aria-label="查看 fanbuz 的 GitHub 主页">
-                    @fanbuz
+                    onClick={() => window.cs.openExternal(LINKS.author)} aria-label="查看 Qson8 的 GitHub 主页">
+                    @Qson8
                   </button>
                 </div>
                 <button type="button" className="about-card__github"
-                  onClick={() => window.cs.openExternal(LINKS.repository)} aria-label="在 GitHub 查看 CodeSucker 项目">
+                  onClick={() => window.cs.openExternal(LINKS.repository)} aria-label="在 GitHub 查看 CodeScribe 项目">
                   在 GitHub 查看项目
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />

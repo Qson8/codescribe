@@ -8,7 +8,7 @@ import {
   type FileCandidate, type PipelineProgress, type ProjectConfig,
 } from '../src/index.ts';
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'codesucker-async-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'codescribe-async-'));
 const write = (relPath: string, content: string) => {
   const file = path.join(tmp, relPath);
   fs.mkdirSync(path.dirname(file), { recursive: true });

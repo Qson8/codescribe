@@ -8,7 +8,7 @@ import { isTrustedExternalUrl, isTrustedReleaseUrl } from '../src/main/external-
 function releaseResponse(patch: Record<string, unknown> = {}): Response {
   return new Response(JSON.stringify({
     tag_name: 'v0.2.0',
-    html_url: 'https://github.com/fanbuz/codesucker/releases/tag/v0.2.0',
+    html_url: 'https://github.com/Qson8/codescribe/releases/tag/v0.2.0',
     published_at: '2026-07-23T00:00:00Z',
     body: '## Added\n- 文件类型统计\n- [下载说明](https://example.com)\n',
     draft: false,
@@ -27,15 +27,15 @@ assert.equal(compareVersions('0.2.0-beta.1', '0.2.0-beta.alpha'), -1);
 assert.equal(compareVersions('1.0.0-A', '1.0.0-a'), -1);
 assert.equal(compareVersions('1.0.0-a', '1.0.0-A'), 1);
 
-assert.equal(isTrustedReleaseUrl('https://github.com/fanbuz/codesucker/releases/tag/v0.2.0'), true);
-assert.equal(isTrustedReleaseUrl('https://github.com/fanbuz/codesucker/releases/tag/v0.2.0+win.1'), true);
-assert.equal(isTrustedReleaseUrl('https://github.com/fanbuz/codesucker/releases/tag/v0.2.0%2Bwin.1'), true);
-assert.equal(isTrustedReleaseUrl('https://github.com/fanbuz/codesucker/releases/tag/v0.2.0%2Fwin.1'), false);
-assert.equal(isTrustedReleaseUrl('https://github.com/fanbuz/codesucker/releases/tag/v0.2.0?download=1'), false);
-assert.equal(isTrustedReleaseUrl('https://evil.example/fanbuz/codesucker/releases/tag/v0.2.0'), false);
-assert.equal(isTrustedExternalUrl('https://github.com/fanbuz/codesucker'), true);
-assert.equal(isTrustedExternalUrl('https://github.com/fanbuz/codesucker/releases/tag/v0.2.0'), true);
-assert.equal(isTrustedExternalUrl('https://github.com/fanbuz/codesucker/issues/21'), false);
+assert.equal(isTrustedReleaseUrl('https://github.com/Qson8/codescribe/releases/tag/v0.2.0'), true);
+assert.equal(isTrustedReleaseUrl('https://github.com/Qson8/codescribe/releases/tag/v0.2.0+win.1'), true);
+assert.equal(isTrustedReleaseUrl('https://github.com/Qson8/codescribe/releases/tag/v0.2.0%2Bwin.1'), true);
+assert.equal(isTrustedReleaseUrl('https://github.com/Qson8/codescribe/releases/tag/v0.2.0%2Fwin.1'), false);
+assert.equal(isTrustedReleaseUrl('https://github.com/Qson8/codescribe/releases/tag/v0.2.0?download=1'), false);
+assert.equal(isTrustedReleaseUrl('https://evil.example/fanbuz/codescribe/releases/tag/v0.2.0'), false);
+assert.equal(isTrustedExternalUrl('https://github.com/Qson8/codescribe'), true);
+assert.equal(isTrustedExternalUrl('https://github.com/Qson8/codescribe/releases/tag/v0.2.0'), true);
+assert.equal(isTrustedExternalUrl('https://github.com/Qson8/codescribe/issues/21'), false);
 
 const now = () => Date.parse('2026-07-23T01:00:00Z');
 let requests = 0;
@@ -43,7 +43,7 @@ const fetcher: FetchLike = async (url, init) => {
   requests++;
   assert.equal(url, LATEST_RELEASE_API);
   assert.equal(init?.method, 'GET');
-  assert.equal((init?.headers as Record<string, string>)['User-Agent'], 'CodeSucker/0.1.0');
+  assert.equal((init?.headers as Record<string, string>)['User-Agent'], 'CodeScribe/0.1.0');
   return releaseResponse();
 };
 
@@ -57,7 +57,7 @@ async function main() {
 
   const buildMetadata = await checkLatestRelease('0.1.0', async () => releaseResponse({
     tag_name: 'v0.2.0+win.1',
-    html_url: 'https://github.com/fanbuz/codesucker/releases/tag/v0.2.0%2Bwin.1',
+    html_url: 'https://github.com/Qson8/codescribe/releases/tag/v0.2.0%2Bwin.1',
   }), { now });
   assert.equal(buildMetadata.status, 'available');
   if (buildMetadata.status !== 'error') assert.equal(buildMetadata.latestVersion, '0.2.0');
@@ -67,7 +67,7 @@ async function main() {
 
   const mislabeledPrerelease = await checkLatestRelease('0.1.0', async () => releaseResponse({
     tag_name: 'v0.2.0-beta.1',
-    html_url: 'https://github.com/fanbuz/codesucker/releases/tag/v0.2.0-beta.1',
+    html_url: 'https://github.com/Qson8/codescribe/releases/tag/v0.2.0-beta.1',
     prerelease: false,
   }), { now });
   assert.equal(mislabeledPrerelease.status, 'error');
