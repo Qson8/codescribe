@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   CONFIG_SCHEMA_VERSION, DEFAULT_EXCLUDES, DEFAULT_EXTENSIONS, RULES_VERSION,
-  discoverAsync, processFilesAsync, renderTxtAsync, sortFiles,
+  discoverAsync, extractFromReadme, processFilesAsync, renderTxtAsync, sortFiles,
 } from '@codescribe/core';
 import type {
   CleanedFile, CleanOptions, DocumentType, FileCandidate, FileEntry, Metadata,
@@ -409,6 +409,9 @@ export function registerPipelineIpc() {
         fontSizePt: 10.5,
         outDir: request.payload.outDir,
         docType: request.payload.docType,
+        metadata: request.payload.metadata,
+        // 用户手册等模板文档需要 README 素材
+        extracted: request.payload.docType === 'user-manual' ? extractFromReadme(request.payload.root) : undefined,
       };
       const formatCount = Number(request.payload.formats.docx) + Number(request.payload.formats.txt);
       let rendered = 0;

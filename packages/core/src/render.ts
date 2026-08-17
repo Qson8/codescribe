@@ -4,7 +4,8 @@ import {
 } from 'docx';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { DocumentType, Page } from './types.ts';
+import type { DocumentType, Metadata, Page } from './types.ts';
+import type { ExtractedManual } from './features.ts';
 import { getDocxBuilder, registerDocxBuilder } from './render-registry.ts';
 
 export interface RenderOptions {
@@ -15,6 +16,10 @@ export interface RenderOptions {
   baseName?: string;
   /** 文档类型，默认 source-program；见 renderDocx */
   docType?: DocumentType;
+  /** 软著申报元数据（供 user-manual / design-spec / application-form 使用） */
+  metadata?: Metadata;
+  /** 从 README 提取的素材（供 user-manual 使用） */
+  extracted?: ExtractedManual;
 }
 
 /**
