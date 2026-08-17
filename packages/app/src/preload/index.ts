@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import type { UpdateCheckResult } from '../shared/update-types';
+import type { LicenseStatus } from '../main/license';
 
 interface ProgressEvent {
   jobId: string;
@@ -41,6 +42,9 @@ const api = {
   revealProjectFile: (root: string, relPath: string): Promise<void> => ipcRenderer.invoke('project:revealFile', root, relPath),
   revealLatestExport: (): Promise<void> => ipcRenderer.invoke('project:revealLatestExport'),
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke('shell:openExternal', url),
+  licenseStatus: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:status'),
+  licenseActivate: (code: string): Promise<{ ok: true; status: LicenseStatus } | { ok: false; error: string }> => ipcRenderer.invoke('license:activate', code),
+  licenseDeactivate: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:deactivate'),
 };
 
 contextBridge.exposeInMainWorld('cs', api);

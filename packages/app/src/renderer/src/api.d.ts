@@ -1,4 +1,5 @@
 import type { UpdateCheckResult } from '../../shared/update-types';
+import type { LicenseStatus } from '../../main/license';
 
 export {};
 
@@ -59,6 +60,9 @@ declare global {
       revealProjectFile: (root: string, relPath: string) => Promise<void>;
       revealLatestExport: () => Promise<void>;
       openExternal: (url: string) => Promise<void>;
+      licenseStatus: () => Promise<LicenseStatus>;
+      licenseActivate: (code: string) => Promise<{ ok: true; status: LicenseStatus } | { ok: false; error: string }>;
+      licenseDeactivate: () => Promise<LicenseStatus>;
     };
   }
 }

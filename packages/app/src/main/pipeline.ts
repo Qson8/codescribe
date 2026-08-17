@@ -11,6 +11,7 @@ import type {
 } from '@codescribe/core';
 import { JobController, type JobHandle, type JobKind } from './job-controller';
 import { assertExportableSelection } from './export-guard';
+import { getLicenseStatus } from './license';
 import { validateDroppedDirectory } from './drop-path';
 import {
   captureProjectRoot, resolveProjectFile, resolveRecentExportFile, validateProjectRoot,
@@ -398,6 +399,12 @@ export function registerPipelineIpc() {
     const workerResources = getResources();
     const report = createProgressReporter(job, event.sender, workerResources.workerCount);
     try {
+      // Pro 门控（纵深防御）：免费版仅允许导出源程序
+      const status = getLicenseStatus();
+      if (request.payload.docType && request.payload.docType !== 'source-program') {
+        const allowed = status.state === 'active' && status.features.includes('pro');
+        if (!allowed) throw new Error('该文档类型属于 Pro 功能，请先激活 CodeScribe Pro');
+      }
       const entries = orderedEntries(request.payload);
       const result = await processWithWorkers(entries, request.payload, job, event.sender);
       requireCurrentScan(request.payload.root, request.payload.scanSessionId);

@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { registerPipelineIpc, shutdownPipeline } from './pipeline';
 import { isTrustedExternalUrl } from './external-url';
 import { registerUpdateIpc } from './update-ipc';
+import { registerLicenseIpc } from './license-ipc';
 import {
   loadWindowState, minimumSizeForBounds, showRestoredWindow,
   WINDOW_STATE_CONFIG_NAME, WindowStateTracker,
@@ -49,6 +50,7 @@ function createWindow() {
 app.whenReady().then(() => {
   registerPipelineIpc();
   registerUpdateIpc();
+  registerLicenseIpc();
 
   ipcMain.on('win:minimize', () => win?.minimize());
   ipcMain.on('win:maximize', () => (win?.isMaximized() ? win.unmaximize() : win?.maximize()));

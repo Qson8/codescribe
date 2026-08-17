@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { runProcess, useStore, type CleanToggles } from '../store';
+import { useEffect, useState } from 'react';
+import { isPro, runProcess, useStore, type CleanToggles } from '../store';
 import { unlockStep } from '../wizard-progress';
 import type { DocumentType, Metadata } from '@codescribe/core';
 
@@ -10,11 +10,11 @@ const TOGGLES: Array<{ key: keyof CleanToggles; label: string; sub?: string }> =
   { key: 'wrapLongLines', label: '超长行自动折行' },
 ];
 
-const DOC_TYPES: Array<{ value: DocumentType; label: string; sub: string }> = [
+const DOC_TYPES: Array<{ value: DocumentType; label: string; sub: string; pro?: boolean }> = [
   { value: 'source-program', label: '源程序', sub: '鉴别材料（每页 50 行）' },
-  { value: 'user-manual', label: '用户手册', sub: 'P1 即将上线' },
-  { value: 'design-spec', label: '设计说明书', sub: 'P2 规划中' },
-  { value: 'application-form', label: '登记申请表', sub: 'P2 规划中' },
+  { value: 'user-manual', label: '用户手册', sub: '含封面 / 目录 / 页眉页码', pro: true },
+  { value: 'design-spec', label: '设计说明书', sub: '模块清单 / 数据流 / 技术栈', pro: true },
+  { value: 'application-form', label: '登记申请表', sub: '标准栏目表格 + 必填校验', pro: true },
 ];
 
 const METADATA_FIELDS: Array<{ key: keyof Metadata; label: string; placeholder?: string; hint?: string; date?: boolean }> = [
@@ -34,8 +34,32 @@ export default function Step3Clean() {
   const s = useStore();
   const p = s.processData;
   const progress = s.jobProgress?.jobKind === 'process' ? s.jobProgress : null;
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => { runProcess(); }, [s.clean]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const proActive = isPro(s.license);
+
+  const doActivate = async () => {
+    if (!code.trim()) { setErr('请输入激活码'); return; }
+    setBusy(true); setErr(null);
+    const res = await window.cs.licenseActivate(code.trim());
+    setBusy(false);
+    if (res.ok) {
+      s.set({ license: res.status, licenseOpen: false });
+    } else {
+      setErr(res.error);
+    }
+  };
+
+  const doDeactivate = async () => {
+    setBusy(true);
+    const status = await window.cs.licenseDeactivate();
+    setBusy(false);
+    s.set({ license: status });
+  };
 
   return (
     <div className="step3-clean">
@@ -59,15 +83,31 @@ export default function Step3Clean() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {DOC_TYPES.map((t) => {
                 const active = s.docType === t.value;
+                const proActive = isPro(s.license);
+                const locked = t.pro && !proActive;
+                const pick = () => {
+                  if (locked) { s.set({ licenseOpen: true }); return; }
+                  s.set({ docType: t.value, processData: null });
+                };
                 return (
-                  <button key={t.value} type="button" onClick={() => { s.set({ docType: t.value, processData: null }); }}
-                    style={{ textAlign: 'left', padding: '10px 12px', border: `1px solid ${active ? 'var(--accent)' : 'var(--border2)'}`, borderRadius: 9, background: active ? 'var(--accent-soft, var(--panel2))' : 'var(--panel2)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text)' }}>{t.label}</span>
+                  <button key={t.value} type="button" onClick={pick}
+                    style={{ textAlign: 'left', padding: '10px 12px', border: `1px solid ${active ? 'var(--accent)' : 'var(--border2)'}`, borderRadius: 9, background: active ? 'var(--accent-soft, var(--panel2))' : 'var(--panel2)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3, opacity: locked && !active ? 0.82 : 1 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {t.label}
+                      {t.pro && <span style={{ fontSize: 11, fontWeight: 700, color: proActive ? 'var(--green)' : 'var(--accent)', background: proActive ? 'var(--green-soft)' : 'var(--accent-soft)', padding: '1px 6px', borderRadius: 4, letterSpacing: .3 }}>{proActive ? 'PRO' : 'PRO 已锁定'}</span>}
+                    </span>
                     <span style={{ fontSize: 11, color: 'var(--text3)' }}>{t.sub}</span>
                   </button>
                 );
               })}
             </div>
+            {!isPro(s.license) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8, padding: '9px 11px', borderRadius: 8, background: 'var(--accent-soft)', fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.5 }}>
+                <span>🔒</span>
+                <span>用户手册 / 设计说明书 / 登记申请表属于 Pro 功能。激活后即可导出全套申报文书。</span>
+                <button type="button" onClick={() => s.set({ licenseOpen: true })} style={{ flex: 'none', marginLeft: 'auto', fontSize: 11.5, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>去激活</button>
+              </div>
+            )}
           </div>
 
           <div style={{ border: '1px solid var(--border2)', borderRadius: 9, overflow: 'hidden' }}>
@@ -198,6 +238,35 @@ export default function Step3Clean() {
           </>
         )}
       </div>
+
+      {/* Pro 激活弹窗 */}
+      {s.licenseOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,16,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(2px)' }} onClick={() => { if (!busy) s.set({ licenseOpen: false }); }}>
+          <div style={{ width: 420, maxWidth: 'calc(100vw - 48px)', background: 'var(--panel)', borderRadius: 16, boxShadow: '0 24px 64px rgba(0,0,0,.35)', padding: 26 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>激活 CodeScribe Pro</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 16 }}>解锁用户手册 / 设计说明书 / 登记申请表导出，一次性买断 99–299 元。激活码请向码著官方索取。</div>
+            {proActive ? (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 9, background: 'var(--green-soft)', fontSize: 12.5, color: 'var(--green)', marginBottom: 14 }}>
+                  <span>✓</span>
+                  <span>已激活，授权给 <b>{s.license.state === 'active' ? s.license.licensee : ''}</b>{s.license.state === 'active' && s.license.expiresAt ? `（至 ${s.license.expiresAt}）` : '（永久）'}</span>
+                </div>
+                <button className="btn-primary" type="button" onClick={doDeactivate} disabled={busy} style={{ width: '100%', height: 40, borderRadius: 9, fontSize: 13 }}>{busy ? '处理中…' : '停用本机授权'}</button>
+              </div>
+            ) : (
+              <div>
+                <input className="cs-input" value={code} placeholder="粘贴激活码，如 CS.xxxx.yyyy" autoFocus
+                  onChange={(e) => setCode(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void doActivate(); }}
+                  style={{ height: 40 }} />
+                {err && <div style={{ fontSize: 11.5, color: 'var(--red)', marginTop: 7 }}>{err}</div>}
+                <button className="btn-primary" type="button" onClick={doActivate} disabled={busy} style={{ width: '100%', height: 40, borderRadius: 9, fontSize: 13, marginTop: 12 }}>{busy ? '校验中…' : '激活'}</button>
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 10, lineHeight: 1.6 }}>未持有激活码？可在正式发布页面购买。本机激活仅存储在本机文件中，代码始终不出本机。</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

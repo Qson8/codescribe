@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { UpdateCheckResult } from '../../shared/update-types';
 import type { DocumentType, Metadata } from '@codescribe/core';
+import type { LicenseStatus } from '../../main/license';
 import { mergeRescannedFiles } from './scan-project-state';
 import { canStartScan } from './scan-guard';
 import { LatestRequestGuard } from './latest-request-guard';
@@ -106,6 +107,8 @@ interface State {
   docType: DocumentType;
   metadata: Metadata;
   metaOpen: boolean;
+  license: LicenseStatus;
+  licenseOpen: boolean;
   clean: CleanToggles;
   layoutOpen: boolean;
   processData: ProcessData | null;
@@ -149,6 +152,8 @@ export const useStore = create<State>((set) => ({
   docType: 'source-program',
   metadata: {},
   metaOpen: false,
+  license: { state: 'none' },
+  licenseOpen: false,
   clean: DEFAULT_CLEAN,
   layoutOpen: false,
   processData: null,
@@ -168,6 +173,23 @@ export function toast(text: string) {
   clearTimeout(toastTimer);
   useStore.getState().set({ toast: text });
   toastTimer = setTimeout(() => useStore.getState().set({ toast: null }), 1800);
+}
+
+/** 加载许可证状态并写入 store */
+export async function refreshLicense(): Promise<LicenseStatus> {
+  const status = await window.cs.licenseStatus();
+  useStore.getState().set({ license: status });
+  return status;
+}
+
+/** 是否拥有 Pro（含到期判断） */
+export function isPro(license: LicenseStatus): boolean {
+  return license.state === 'active' && license.features.includes('pro');
+}
+
+/** 当前文档类型是否需要 Pro；source-program 始终免费 */
+export function docTypeNeedsPro(docType: DocumentType): boolean {
+  return docType !== 'source-program';
 }
 
 const recentRequestGuard = new LatestRequestGuard();

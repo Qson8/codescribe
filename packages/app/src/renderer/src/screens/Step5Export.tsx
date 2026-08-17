@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  cleanOptions, createJobId, isCancellation, orderedIncluded, refreshRecent, runProcess, toast, useStore,
+  cleanOptions, createJobId, docTypeNeedsPro, isCancellation, isPro, orderedIncluded, refreshRecent, runProcess, toast, useStore,
 } from '../store';
 import { settleExportState } from '../export-state';
 
@@ -17,9 +17,11 @@ export default function Step5Export() {
   const failN = audit.filter((a) => a.status === 'fail').length;
   const hasRisk = failN > 0;
   const hasExportableContent = !!p && p.selection.pages.length > 0 && p.selection.pickedLines > 0;
+  const proLocked = docTypeNeedsPro(s.docType) && !isPro(s.license);
 
   const doExport = async () => {
     if (s.exporting || !s.root || !s.scanSessionId) return;
+    if (proLocked) { s.set({ licenseOpen: true }); return; }
     if (!hasExportableContent) { toast('没有可导出的代码内容，请调整文件选择或清洗规则'); return; }
     if (!s.swName.trim()) { toast('请先在「清洗与排版」填写软件全称+版本号'); s.set({ step: 3 }); return; }
     if (!s.fmtDocx && !s.fmtTxt) { toast('请至少选择一种输出格式'); return; }
@@ -36,6 +38,8 @@ export default function Step5Export() {
         title: s.swName,
         owner: s.owner || undefined,
         clean: cleanOptions(s.clean),
+        docType: s.docType,
+        metadata: s.metadata,
         outDir: s.outDir || `${s.root}/软著申报`,
         formats: { docx: s.fmtDocx, txt: s.fmtTxt },
       }, jobId);
@@ -178,16 +182,23 @@ export default function Step5Export() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
+        {proLocked && (
+          <div style={{ display: 'flex', gap: 7, padding: '9px 11px', borderRadius: 8, background: 'var(--accent-soft)', fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.5, alignItems: 'center' }}>
+            <span>🔒</span>
+            <span>「{s.docType === 'user-manual' ? '用户手册' : s.docType === 'design-spec' ? '设计说明书' : '登记申请表'}」属于 Pro 功能</span>
+            <button type="button" onClick={() => s.set({ licenseOpen: true })} style={{ flex: 'none', marginLeft: 'auto', fontSize: 11.5, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>去激活</button>
+          </div>
+        )}
         {hasRisk && (
           <div style={{ display: 'flex', gap: 7, padding: '9px 11px', borderRadius: 8, background: 'var(--red-soft)', fontSize: 11.5, color: 'var(--red)', lineHeight: 1.5 }}>
             <span>⚠</span><span>存在 {failN} 项退回风险，建议先处理再导出</span>
           </div>
         )}
         <button className="btn-primary" onClick={s.exporting ? cancelExport : doExport}
-          disabled={!s.exporting && !hasExportableContent}
-          style={{ height: 44, borderRadius: 10, fontSize: 14, fontWeight: 600, boxShadow: '0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, opacity: s.exporting ? 0.85 : hasExportableContent ? 1 : 0.5, cursor: !s.exporting && !hasExportableContent ? 'not-allowed' : undefined }}>
+          disabled={!s.exporting && (!hasExportableContent || proLocked)}
+          style={{ height: 44, borderRadius: 10, fontSize: 14, fontWeight: 600, boxShadow: '0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, opacity: s.exporting ? 0.85 : hasExportableContent && !proLocked ? 1 : 0.5, cursor: !s.exporting && (!hasExportableContent || proLocked) ? 'not-allowed' : undefined }}>
           {s.exporting && <svg width="15" height="15" viewBox="0 0 30 30" style={{ animation: 'cs-spin .8s linear infinite' }}><circle cx="15" cy="15" r="12" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="4" /><path d="M15 3a12 12 0 0 1 12 12" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" /></svg>}
-          {s.exporting ? `${exportLabel} · 点击取消` : '生成申报文档'}
+          {s.exporting ? `${exportLabel} · 点击取消` : proLocked ? '激活 Pro 后导出' : '生成申报文档'}
         </button>
       </div>
 

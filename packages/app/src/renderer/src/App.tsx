@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { checkForUpdates, refreshRecent, scanProject, useStore, toast } from './store';
+import { checkForUpdates, refreshLicense, refreshRecent, scanProject, useStore, toast } from './store';
 import Step1Import from './screens/Step1Import';
 import Step2Files from './screens/Step2Files';
 import Step3Clean from './screens/Step3Clean';
@@ -40,6 +40,7 @@ export default function App() {
 
   useEffect(() => {
     void refreshRecent();
+    void refreshLicense();
     void checkForUpdates(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
