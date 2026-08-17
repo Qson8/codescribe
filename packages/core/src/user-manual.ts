@@ -6,7 +6,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Metadata } from './types.ts';
 import type { ExtractedManual } from './features.ts';
+import type { ProjectAnalysis } from './analyze.ts';
 import type { RenderOptions } from './render.ts';
+import { renderAiDraftDocx } from './ai-draft.ts';
 import { registerDocxBuilder } from './render-registry.ts';
 import { buildHeaderTitle } from './doc-type.ts';
 
@@ -16,6 +18,8 @@ interface UserManualInput {
   metadata: Metadata;
   extracted: ExtractedManual;
   outDir: string;
+  /** 预计算的静态分析结果（无 README 时提供真实兜底） */
+  analysis?: ProjectAnalysis;
 }
 
 function para(text: string, opts: { size?: number; bold?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType] } = {}): Paragraph {
@@ -44,6 +48,7 @@ function sectionPage(children: (Paragraph | TableOfContents)[]): (Paragraph | Ta
 }
 
 async function buildUserManual(input: UserManualInput, opts: RenderOptions): Promise<string> {
+  if (opts.aiDraft) return renderAiDraftDocx(opts.aiDraft, input.metadata, opts);
   const headerTitle = buildHeaderTitle(input.metadata) || opts.title;
   const font = { name: FONT, eastAsia: FONT } as const;
   const bodySize = 21; // 10.5pt
@@ -68,25 +73,49 @@ async function buildUserManual(input: UserManualInput, opts: RenderOptions): Pro
   const content: Paragraph[] = [];
 
   content.push(heading('1 产品简介', 'HEADING_1'));
-  const summary = input.extracted.summary || input.metadata.description || '本软件用于生成软件著作权登记所需的各类申报文档。';
+  const summary = input.extracted.summary
+    || input.metadata.description
+    || input.analysis?.manifest.description
+    || '本软件用于生成软件著作权登记所需的各类申报文档。';
   content.push(para(summary));
 
   content.push(heading('2 功能特性', 'HEADING_1'));
+  const fallbackFeatures = [
+    input.metadata.description ?? input.analysis?.manifest.description,
+    ...(input.analysis?.techStack.slice(0, 6) ?? []),
+  ].filter((f): f is string => !!f && f !== input.extracted.summary);
   const features = input.extracted.features.length > 0
     ? input.extracted.features
-    : [input.metadata.description ?? '离线生成软著申报文档', '代码不出本机，隐私安全'];
+    : fallbackFeatures.length > 0
+      ? fallbackFeatures
+      : ['离线生成软著申报文档', '代码不出本机，隐私安全'];
   features.forEach((f) => content.push(bullet(f)));
 
+  if (input.analysis) {
+    content.push(heading('3 技术栈与依赖', 'HEADING_1'));
+    if (input.analysis.techStack.length > 0) {
+      content.push(para('本项目依赖以下技术/框架：'));
+      input.analysis.techStack.slice(0, 12).forEach((t) => content.push(bullet(t)));
+    }
+    if (input.analysis.manifest.scripts && input.analysis.manifest.scripts.length > 0) {
+      content.push(para('可用的脚本命令：'));
+      input.analysis.manifest.scripts.slice(0, 10).forEach((s) => content.push(bullet(s)));
+    }
+    if (input.analysis.entryFiles.length > 0) {
+      content.push(para(`入口文件：${input.analysis.entryFiles.slice(0, 5).join('、')}`));
+    }
+  }
+
   if (input.extracted.install.length > 0) {
-    content.push(heading('3 安装说明', 'HEADING_1'));
+    content.push(heading('4 安装说明', 'HEADING_1'));
     input.extracted.install.forEach((line) => content.push(para(line)));
   }
 
   if (input.extracted.usage.length > 0) {
-    content.push(heading('4 使用说明', 'HEADING_1'));
+    content.push(heading('5 使用说明', 'HEADING_1'));
     input.extracted.usage.forEach((line) => content.push(para(line)));
   } else {
-    content.push(heading('4 使用说明', 'HEADING_1'));
+    content.push(heading('5 使用说明', 'HEADING_1'));
     content.push(para('打开 CodeScribe，导入项目目录，按向导完成源码清洗、分页预览与文档导出。'));
   }
 
@@ -96,7 +125,7 @@ async function buildUserManual(input: UserManualInput, opts: RenderOptions): Pro
     extra.bullets.forEach((b) => content.push(bullet(b)));
   }
 
-  content.push(heading('5 免责声明', 'HEADING_1'));
+  content.push(heading('6 免责声明', 'HEADING_1'));
   content.push(para('本用户手册由 CodeScribe 依据项目说明自动生成，仅供参考。生成内容不代表软件著作权登记审查结论，最终以主管机构要求为准。'));
 
   const doc = new Document({
@@ -134,7 +163,7 @@ async function buildUserManual(input: UserManualInput, opts: RenderOptions): Pro
 registerDocxBuilder('user-manual', async (_pages, opts) => {
   const metadata = opts.metadata ?? {};
   const extracted = opts.extracted ?? { summary: '', features: [], install: [], usage: [], extraSections: [] };
-  return buildUserManual({ metadata, extracted, outDir: opts.outDir }, opts);
+  return buildUserManual({ metadata, extracted, analysis: opts.analysis, outDir: opts.outDir }, opts);
 });
 
 export { buildUserManual };

@@ -5,7 +5,7 @@ import * as path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  DEFAULT_EXCLUDES, DEFAULT_EXTENSIONS, defaultCleanOptions, discover, extractFromReadme,
+  DEFAULT_EXCLUDES, DEFAULT_EXTENSIONS, analyzeProject, defaultCleanOptions, discover, extractFromReadme,
   processFiles, renderDocx, sortFiles,
 } from '../src/index.ts';
 import type { DocumentType, Metadata } from '../src/types.ts';
@@ -54,6 +54,10 @@ assert.ok(result.selection.pages.length > 0, '应生成分页');
 assert.ok(result.selection.pickedLines > 0, '应选择到代码行');
 
 const extracted = extractFromReadme(repoRoot);
+const analysis = analyzeProject(files, repoRoot);
+assert.ok(analysis.modules.length > 0, '静态分析应识别到模块');
+assert.ok(analysis.techStack.length > 0, '静态分析应识别到技术栈');
+assert.ok(analysis.totalCodeLines > 0, '静态分析应统计到代码行数');
 const summary = `本系统自动扫描并识别项目源代码，执行注释清理与敏感信息脱敏后，按软件著作权登记规范自动排版生成源程序鉴别材料，并支持一键生成用户手册、设计说明书与登记申请表等配套文书，全部处理均在本地完成。`;
 
 const cases: Array<{ docType: DocumentType; baseName: string; expect: RegExp }> = [
@@ -62,6 +66,9 @@ const cases: Array<{ docType: DocumentType; baseName: string; expect: RegExp }> 
   { docType: 'design-spec', baseName: '设计说明书', expect: /设计说明书|模块|架构|技术|环境/ },
   { docType: 'application-form', baseName: '登记申请表', expect: /申请表|软件名称|版本号|著作权人|开发完成日期/ },
 ];
+
+const firstModule = analysis.modules[0].name;
+const techStackHead = analysis.techStack.slice(0, 6).join('、');
 
 for (const { docType, baseName, expect } of cases) {
   const opts = {
@@ -74,6 +81,7 @@ for (const { docType, baseName, expect } of cases) {
     metadata,
     extracted: docType === 'user-manual' ? extracted : undefined,
     root: docType === 'design-spec' ? repoRoot : undefined,
+    analysis: (docType === 'design-spec' || docType === 'user-manual') ? analysis : undefined,
   };
   const file = await renderDocx(result.selection.pages, opts);
   assert.ok(fs.existsSync(file), `${docType} 应生成文件：${file}`);
@@ -82,6 +90,10 @@ for (const { docType, baseName, expect } of cases) {
   const text = extractDocxText(file);
   assert.ok(text.length > 50, `${docType} 应包含正文文本`);
   assert.match(text, expect, `${docType} 应包含「${expect.source}」相关内容`);
+  if (docType === 'design-spec') {
+    assert.ok(text.includes(firstModule), `设计说明书应包含真实模块名「${firstModule}」`);
+    assert.ok(text.includes(techStackHead.split('、')[0]), `设计说明书应包含真实技术栈「${techStackHead.split('、')[0]}」`);
+  }
   console.log(`✅ ${docType.padEnd(17)} ${file} (${(fs.statSync(file).size / 1024).toFixed(1)}KB)`);
 }
 

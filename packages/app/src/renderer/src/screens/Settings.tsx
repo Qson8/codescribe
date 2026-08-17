@@ -172,6 +172,74 @@ export default function Settings() {
     }
   };
 
+  // ── AI 生成配置 ──────────────────────────────────────────────
+  const [aiConfig, setAiConfig] = useState<AiConfig>({ provider: 'openai', baseUrl: '', apiKey: '', model: '' });
+  const [aiLoaded, setAiLoaded] = useState(false);
+  const [aiDirty, setAiDirty] = useState(false);
+  const [aiSaving, setAiSaving] = useState(false);
+  const [aiTesting, setAiTesting] = useState(false);
+  const [aiTestResult, setAiTestResult] = useState<{ ok: boolean; detail: string } | null>(null);
+  const [aiWarning, setAiWarning] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const aiBaseUrl = aiConfig.provider === 'ollama'
+    ? (aiConfig.baseUrl || 'http://127.0.0.1:11434/v1')
+    : (aiConfig.baseUrl || 'https://api.openai.com/v1');
+  const aiModel = aiConfig.model || (aiConfig.provider === 'ollama' ? 'qwen2.5:7b' : 'gpt-4o-mini');
+
+  const loadAi = async () => {
+    setAiError(null);
+    try {
+      const state = await window.cs.getAiConfig();
+      setAiConfig(state.config);
+      setAiWarning(state.warning);
+      setAiDirty(false);
+      setAiTestResult(null);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : '无法读取 AI 配置');
+    } finally {
+      setAiLoaded(true);
+    }
+  };
+
+  useEffect(() => { void loadAi(); }, []);
+
+  const saveAi = async () => {
+    if (aiSaving) return;
+    setAiSaving(true);
+    try {
+      const state = await window.cs.saveAiConfig(aiConfig);
+      setAiConfig(state.config);
+      setAiWarning(state.warning);
+      setAiDirty(false);
+      setAiTestResult(null);
+      toast('AI 配置已保存');
+    } catch (error) {
+      toast(`保存失败：${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setAiSaving(false);
+    }
+  };
+
+  const testAi = async () => {
+    if (aiTesting) return;
+    setAiTesting(true);
+    setAiTestResult(null);
+    try {
+      const result = await window.cs.testAiConnection();
+      setAiTestResult({ ok: result.ok, detail: result.ok ? result.detail : result.error });
+    } catch (error) {
+      setAiTestResult({ ok: false, detail: error instanceof Error ? error.message : '连接测试失败' });
+    } finally {
+      setAiTesting(false);
+    }
+  };
+
+  const updateAiConfig = (patch: Partial<AiConfig>) => {
+    setAiConfig((current) => ({ ...current, ...patch }));
+    setAiDirty(true);
+    setAiTestResult(null);
+  };
+
   return (
     <div className="settings-page">
       <div className="settings-shell">
@@ -299,6 +367,80 @@ export default function Settings() {
               )}
             </section>
 
+            <section className="settings-card">
+              <div className="settings-card__title">AI 生成</div>
+              <div className="settings-card__description">
+                仅用于「用户手册 / 设计说明书」的 AI 生成模式（Pro 功能）。需将已清洗、已脱敏的代码发送到自备的 LLM 服务。
+              </div>
+
+              {aiWarning && <div className="settings-rule-warning" role="status">{aiWarning}</div>}
+              {aiError && <div className="settings-rule-error" role="alert">{aiError}</div>}
+              {!aiLoaded ? (
+                <div className="settings-rule-loading" aria-live="polite">正在读取 AI 配置…</div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                    {(['openai', 'ollama'] as const).map((provider) => (
+                      <button key={provider} type="button" onClick={() => updateAiConfig({ provider })}
+                        style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${aiConfig.provider === provider ? 'var(--accent)' : 'var(--border2)'}`, background: aiConfig.provider === provider ? 'var(--accent-soft, var(--panel2))' : 'var(--panel2)', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, color: aiConfig.provider === provider ? 'var(--accent)' : 'var(--text)' }}>
+                        {provider === 'openai' ? 'OpenAI 兼容' : 'Ollama 本地'}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>服务地址（Base URL）</div>
+                      <input className="cs-input" value={aiConfig.baseUrl} placeholder={aiBaseUrl}
+                        aria-label="AI 服务地址"
+                        onChange={(event) => updateAiConfig({ baseUrl: event.target.value })} />
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
+                        {aiConfig.provider === 'ollama' ? 'Ollama 默认：http://127.0.0.1:11434/v1' : 'OpenAI 默认：https://api.openai.com/v1'}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>API Key {aiConfig.provider === 'ollama' && <span style={{ color: 'var(--text3)' }}>（本地可留空）</span>}</div>
+                      <input className="cs-input" type="password" value={aiConfig.apiKey} placeholder={aiConfig.provider === 'ollama' ? '留空即可' : 'sk-...'}
+                        autoComplete="off" aria-label="AI API Key"
+                        onChange={(event) => updateAiConfig({ apiKey: event.target.value })} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>模型</div>
+                      <input className="cs-input" value={aiConfig.model} placeholder={aiModel}
+                        aria-label="AI 模型名称"
+                        onChange={(event) => updateAiConfig({ model: event.target.value })} />
+                    </div>
+                  </div>
+
+                  <div className="settings-rule-syntax">
+                    密钥仅保存在本机（userData/ai-config.json，权限 0600）。AI 生成会向该服务发送「已清洗、已脱敏」的代码片段，代码量上限约 8000 行。
+                  </div>
+
+                  {aiTestResult && (
+                    <div className={`settings-rule-warning${aiTestResult.ok ? '' : ''}`}
+                      style={aiTestResult.ok ? { background: 'var(--green-soft)', color: 'var(--green)', border: '1px solid color-mix(in srgb, var(--green) 30%, transparent)', padding: '8px 10px', borderRadius: 7, fontSize: 11.5, lineHeight: 1.5 } : undefined}
+                      role="status">
+                      {aiTestResult.ok ? `✓ ${aiTestResult.detail}` : `✕ ${aiTestResult.detail}`}
+                    </div>
+                  )}
+
+                  <div className="settings-rule-footer">
+                    <div className="settings-rule-footer__status" aria-live="polite">
+                      {aiDirty ? '有未保存更改' : '已保存'}
+                    </div>
+                    <div className="settings-rule-footer__actions">
+                      <button type="button" className="btn-ghost" disabled={aiTesting}
+                        onClick={() => void testAi()}>
+                        {aiTesting ? '测试中…' : '测试连接'}
+                      </button>
+                      <button type="button" className="btn-primary" disabled={aiSaving || !aiDirty}
+                        onClick={() => void saveAi()}>{aiSaving ? '保存中…' : '保存配置'}</button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </section>
+
           </div>
 
           <aside className="settings-info-stack" aria-label="应用信息">
@@ -308,7 +450,7 @@ export default function Settings() {
                 隐私说明
               </div>
               <div className="settings-card__body">
-                CodeScribe 的扫描、清洗、脱敏、排版与导出全部在本机完成，您的源代码<span>永远不会离开这台电脑</span>。应用启动或您手动检查更新时，只向 GitHub 请求公开的 Release 版本元数据，不会发送项目路径、源码或配置。
+                CodeScribe 的扫描、清洗、脱敏、排版与导出全部在本机完成，您的源代码<span>永远不会离开这台电脑</span>。应用启动或您手动检查更新时，只向 GitHub 请求公开的 Release 版本元数据，不会发送项目路径、源码或配置。<strong>例外</strong>：仅当您在「清洗与排版」中主动选择「AI 生成」模式时，才会把已清洗、已脱敏的代码片段发送到您自己配置的 LLM 服务。
               </div>
             </section>
 

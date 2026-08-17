@@ -3,6 +3,11 @@ export {
   DOC_TYPE_LABELS, DOC_TYPE_REQUIRED_METADATA, DEFAULT_DOC_TYPE,
   isDocumentType, missingMetadata, splitTitle, buildHeaderTitle, validateMetadataFor,
 } from './doc-type.ts';
+export {
+  analyzeProject, moduleNameOf, extractModuleSummary,
+  type ProjectAnalysis, type AnalyzedModule, type AnalyzedSymbol,
+} from './analyze.ts';
+export { renderAiDraftDocx } from './ai-draft.ts';
 export { registerDocxBuilder, getDocxBuilder } from './render-registry.ts';
 export { extractFromReadme, type ExtractedManual, type ManualSection } from './features.ts';
 export { buildUserManual, type UserManualInput } from './user-manual.ts';

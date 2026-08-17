@@ -1,5 +1,6 @@
 import type { UpdateCheckResult } from '../../shared/update-types';
 import type { LicenseStatus } from '../../main/license';
+import type { AiConfigState, AiProvider } from '../../shared/ai-types';
 
 export {};
 
@@ -8,7 +9,7 @@ declare global {
 
   interface JobProgress {
     jobId: string;
-    jobKind: 'scan' | 'process' | 'export';
+    jobKind: 'scan' | 'process' | 'export' | 'ai';
     workerCount: number;
     stage: 'discovering' | 'scanning' | 'cleaning' | 'selecting' | 'auditing' | 'rendering';
     completed: number;
@@ -21,6 +22,13 @@ declare global {
     rules: string[];
     source: 'default' | 'user';
     warning: string | null;
+  }
+
+  interface AiConfig {
+    provider: AiProvider;
+    baseUrl: string;
+    apiKey: string;
+    model: string;
   }
 
   interface RecentProjectEntry {
@@ -50,6 +58,11 @@ declare global {
       getScanExcludes: () => Promise<ScanExcludesState>;
       saveScanExcludes: (rules: string[]) => Promise<ScanExcludesState>;
       resetScanExcludes: () => Promise<ScanExcludesState>;
+      getAiConfig: () => Promise<AiConfigState>;
+      saveAiConfig: (input: unknown) => Promise<AiConfigState>;
+      resetAiConfig: () => Promise<AiConfigState>;
+      testAiConnection: () => Promise<{ ok: true; detail: string } | { ok: false; error: string }>;
+      aiGenerate: (payload: unknown, jobId: string) => Promise<{ jobId: string; draft: string }>;
       scan: (root: string, jobId: string, scanSessionId: string) => Promise<unknown>;
       process: (payload: unknown, jobId: string) => Promise<unknown>;
       export: (payload: unknown, jobId: string) => Promise<unknown>;

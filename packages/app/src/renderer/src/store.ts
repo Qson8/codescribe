@@ -111,6 +111,14 @@ interface State {
   licenseOpen: boolean;
   clean: CleanToggles;
   layoutOpen: boolean;
+  /** 文档生成模式：offline=全离线静态分析；ai=AI 生成草稿 */
+  genMode: 'offline' | 'ai';
+  /** AI 草稿内容（按 docType 记忆，用于导出与审校） */
+  aiDraft: string;
+  /** AI 生成中 */
+  aiGenerating: boolean;
+  /** AI 草稿审校面板是否展开 */
+  aiDraftOpen: boolean;
   processData: ProcessData | null;
   processing: boolean;
   page: number;
@@ -156,6 +164,10 @@ export const useStore = create<State>((set) => ({
   licenseOpen: false,
   clean: DEFAULT_CLEAN,
   layoutOpen: false,
+  genMode: 'offline',
+  aiDraft: '',
+  aiGenerating: false,
+  aiDraftOpen: false,
   processData: null,
   processing: false,
   page: 1,
@@ -270,7 +282,7 @@ export function cleanOptions(t: CleanToggles) {
   return { ...t, maxLineWidth: 78, tabWidth: 4 };
 }
 
-export function createJobId(kind: 'scan' | 'process' | 'export'): string {
+export function createJobId(kind: 'scan' | 'process' | 'export' | 'ai'): string {
   return `${kind}-${crypto.randomUUID()}`;
 }
 
@@ -463,5 +475,41 @@ export async function runProcess() {
     if (useStore.getState().activeJobId !== jobId) return;
     useStore.getState().set({ processing: false, activeJobId: null, jobProgress: null });
     if (!isCancellation(e)) toast('处理失败：' + (e instanceof Error ? e.message : String(e)));
+  }
+}
+
+/** 文档类型是否支持 AI 生成（用户手册 / 设计说明书） */
+export function aiDocTypeSupported(docType: DocumentType): boolean {
+  return docType === 'user-manual' || docType === 'design-spec';
+}
+
+/** 调用主进程 AI 生成草稿，写入 store 供审校与导出 */
+export async function generateAiDraft(): Promise<void> {
+  const s = useStore.getState();
+  if (!s.root || !s.scanSessionId) return;
+  if (!aiDocTypeSupported(s.docType)) return;
+  if (!isPro(s.license)) { s.set({ licenseOpen: true }); return; }
+  const scanSessionId = s.scanSessionId;
+  const jobId = createJobId('ai');
+  s.set({ aiGenerating: true, activeJobId: jobId, jobProgress: null });
+  try {
+    const result = await window.cs.aiGenerate({
+      root: s.root,
+      scanSessionId,
+      orderedRelPaths: orderedIncluded(s).map((f) => f.relPath),
+      title: s.swName,
+      owner: s.owner || undefined,
+      docType: s.docType,
+      metadata: s.metadata,
+      clean: cleanOptions(s.clean),
+    }, jobId);
+    const current = useStore.getState();
+    if (current.activeJobId !== jobId) return;
+    current.set({ aiGenerating: false, aiDraft: result.draft, aiDraftOpen: true, activeJobId: null, jobProgress: null });
+    toast('AI 草稿已生成，请在下方审校后导出');
+  } catch (e) {
+    if (useStore.getState().activeJobId !== jobId) return;
+    useStore.getState().set({ aiGenerating: false, activeJobId: null, jobProgress: null });
+    if (!isCancellation(e)) toast('AI 生成失败：' + (e instanceof Error ? e.message : String(e)));
   }
 }

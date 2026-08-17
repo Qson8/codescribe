@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "test": "tsx test/smoke.ts && tsx test/doc-type.ts && tsx test/render-registry.ts && tsx test/user-manual.ts && tsx test/documents.ts && tsx test/attribution.ts && tsx test/multiline-strings.ts && tsx test/empty-result.ts && tsx test/release-matrix.ts && tsx test/async-pipeline.ts && tsx test/exclude-rules.ts && tsx test/e2e-walkthrough.ts",
+    "test": "tsx test/smoke.ts && tsx test/doc-type.ts && tsx test/render-registry.ts && tsx test/user-manual.ts && tsx test/analyze.ts && tsx test/documents.ts && tsx test/attribution.ts && tsx test/multiline-strings.ts && tsx test/empty-result.ts && tsx test/release-matrix.ts && tsx test/async-pipeline.ts && tsx test/exclude-rules.ts && tsx test/e2e-walkthrough.ts",
     "test:real-projects": "tsx test/real-projects.ts"
   },
   "dependencies": {

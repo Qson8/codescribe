@@ -5,9 +5,13 @@ import {
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Metadata } from './types.ts';
+import { DEFAULT_EXTENSIONS, DEFAULT_EXCLUDES } from './types.ts';
 import type { RenderOptions } from './render.ts';
+import { renderAiDraftDocx } from './ai-draft.ts';
 import { registerDocxBuilder } from './render-registry.ts';
 import { buildHeaderTitle } from './doc-type.ts';
+import { analyzeProject, type ProjectAnalysis } from './analyze.ts';
+import { discover } from './discover.ts';
 
 const FONT = 'SimSun';
 
@@ -15,6 +19,8 @@ interface DesignSpecInput {
   metadata: Metadata;
   root: string;
   outDir: string;
+  /** 可选：直接传入预计算的静态分析结果，避免重复读取 */
+  analysis?: ProjectAnalysis;
 }
 
 function heading(text: string, level: keyof typeof HeadingLevel): Paragraph {
@@ -29,26 +35,28 @@ function bullet(text: string): Paragraph {
   return new Paragraph({ bullet: { level: 0 }, spacing: { after: 80, line: 300 }, children: [new TextRun({ text, size: 21, font: FONT })] });
 }
 
-/** 顶层目录/文件作为模块清单来源 */
-function listModules(root: string): string[] {
-  const modules: string[] = [];
-  try {
-    for (const name of fs.readdirSync(root)) {
-      if (name.startsWith('.') || ['node_modules', 'dist', 'build', 'out', 'target'].includes(name)) continue;
-      modules.push(name);
+/** 汇总依赖关系为一句可读的数据流描述 */
+function summarizeDataFlow(analysis: ProjectAnalysis): string {
+  const flows: string[] = [];
+  for (const mod of analysis.modules) {
+    if (mod.dependencies.length > 0) {
+      flows.push(`${mod.name} → ${mod.dependencies.slice(0, 6).join('、')}`);
     }
-  } catch {
-    /* 目录不可读时忽略 */
   }
-  return modules;
+  if (flows.length === 0) return '未检测到明确的模块间依赖关系，数据按各模块独立处理后汇入输出。';
+  return flows.slice(0, 12).join('；');
 }
 
 async function buildDesignSpec(input: DesignSpecInput, opts: RenderOptions): Promise<string> {
+  if (opts.aiDraft) return renderAiDraftDocx(opts.aiDraft, input.metadata, opts);
   const headerTitle = buildHeaderTitle(input.metadata) || opts.title;
   const font = { name: FONT, eastAsia: FONT } as const;
-  const modules = listModules(input.root);
-  const languages = (input.metadata.languages ?? '').trim() || '—';
+  const analysis = input.analysis ?? analyzeProject(discover(input.root, DEFAULT_EXTENSIONS, DEFAULT_EXCLUDES), input.root);
+  const languages = (input.metadata.languages ?? '').trim() || (analysis.languageStats.length > 0
+    ? analysis.languageStats.slice(0, 6).map((s) => s.lang).join('、')
+    : '—');
   const environment = (input.metadata.environment ?? '').trim() || '—';
+  const techStack = analysis.techStack;
 
   const cover = [
     new Paragraph({ spacing: { before: 3600 }, children: [new TextRun({ text: '', size: 42, font: FONT })] }),
@@ -63,29 +71,48 @@ async function buildDesignSpec(input: DesignSpecInput, opts: RenderOptions): Pro
   content.push(heading('1.1 编写目的', 'HEADING_2'));
   content.push(para(`本说明书描述《${headerTitle}》的总体设计、模块划分与数据流，供软件著作权登记及后期维护参考。`));
   content.push(heading('1.2 项目背景', 'HEADING_2'));
-  content.push(para(input.metadata.description ?? '本项目为离线生成软件著作权登记申报文档的工具。'));
+  content.push(para(input.metadata.description ?? analysis.manifest.description ?? '本项目为离线生成软件著作权登记申报文档的工具。'));
 
   content.push(heading('2 总体设计', 'HEADING_1'));
   content.push(heading('2.1 开发环境', 'HEADING_2'));
   content.push(bullet(`开发语言：${languages}`));
   content.push(bullet(`运行环境：${environment}`));
-  content.push(heading('2.2 系统模块划分', 'HEADING_2'));
-  if (modules.length > 0) {
-    modules.forEach((m) => content.push(bullet(m)));
+  content.push(heading('2.2 系统规模', 'HEADING_2'));
+  content.push(bullet(`参与申报的源文件共 ${analysis.fileCount} 个，代码约 ${analysis.totalCodeLines.toLocaleString('zh-CN')} 行`));
+  if (techStack.length > 0) content.push(bullet(`依赖技术/框架：${techStack.slice(0, 12).join('、')}`));
+  if (analysis.entryFiles.length > 0) content.push(bullet(`入口文件：${analysis.entryFiles.slice(0, 5).join('、')}`));
+  content.push(heading('2.3 系统模块划分', 'HEADING_2'));
+  if (analysis.modules.length > 0) {
+    for (const mod of analysis.modules.slice(0, 20)) {
+      content.push(bullet(`${mod.name}（${mod.files.length} 个文件，约 ${mod.codeLines.toLocaleString('zh-CN')} 行）`));
+    }
   } else {
     content.push(para('未检测到项目目录结构，请补充模块清单。'));
   }
 
   content.push(heading('3 模块详细设计', 'HEADING_1'));
-  if (modules.length > 0) {
-    modules.forEach((m) => {
-      content.push(heading(m, 'HEADING_2'));
-      content.push(para(`${m} 模块负责系统内对应功能域的实现，与其余模块通过项目内定义的接口协作。`));
-    });
+  if (analysis.modules.length > 0) {
+    for (const mod of analysis.modules.slice(0, 20)) {
+      content.push(heading(mod.name, 'HEADING_2'));
+      if (mod.symbols.length > 0) {
+        const classNames = mod.symbols.slice(0, 8);
+        const funcs = mod.symbols.slice(8, 24);
+        content.push(para(`该模块共 ${mod.files.length} 个文件、约 ${mod.codeLines.toLocaleString('zh-CN')} 行代码，实现${classNames.length > 0 ? '类/结构：' + classNames.join('、') : ''}${funcs.length > 0 ? (classNames.length > 0 ? '，主要函数/导出：' : '主要函数/导出：') + funcs.join('、') : ''}。`));
+        if (mod.dependencies.length > 0) {
+          content.push(para(`该模块依赖：${mod.dependencies.slice(0, 8).join('、')}。`));
+        }
+      } else {
+        content.push(para(`该模块共 ${mod.files.length} 个文件、约 ${mod.codeLines.toLocaleString('zh-CN')} 行代码，未提取到类或函数声明，请结合源码补充职责描述。`));
+      }
+      content.push(para(`${mod.name} 模块负责系统内对应功能域的实现，与其余模块通过项目内定义的接口协作。`));
+    }
+  } else {
+    content.push(para('未检测到项目模块，请补充模块清单。'));
   }
 
   content.push(heading('4 数据流设计', 'HEADING_1'));
-  content.push(para('数据在模块间按「输入 → 处理 → 输出」流转。各模块读取项目目录中的源文件或配置，经内部处理后将结果写入输出目录，供下一步骤消费。'));
+  content.push(para('数据在模块间按「输入 → 处理 → 输出」流转。'));
+  content.push(para(summarizeDataFlow(analysis)));
 
   content.push(heading('5 用户界面', 'HEADING_1'));
   content.push(para('系统提供向导式操作界面，用户按步骤完成导入、配置、预览与导出。'));
@@ -116,7 +143,7 @@ async function buildDesignSpec(input: DesignSpecInput, opts: RenderOptions): Pro
 
 registerDocxBuilder('design-spec', async (_pages, opts) => {
   const root = opts.root ?? process.cwd();
-  return buildDesignSpec({ metadata: opts.metadata ?? {}, root, outDir: opts.outDir }, opts);
+  return buildDesignSpec({ metadata: opts.metadata ?? {}, root, outDir: opts.outDir, analysis: opts.analysis }, opts);
 });
 
 export { buildDesignSpec };

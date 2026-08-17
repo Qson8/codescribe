@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
-import { isPro, runProcess, useStore, type CleanToggles } from '../store';
+import {
+  aiDocTypeSupported, generateAiDraft, isPro, runProcess, useStore, type CleanToggles,
+} from '../store';
 import { unlockStep } from '../wizard-progress';
 import LicenseModal from './LicenseModal';
 import type { DocumentType, Metadata } from '@codescribe/core';
@@ -88,6 +90,81 @@ export default function Step3Clean() {
               </div>
             )}
           </div>
+
+          {aiDocTypeSupported(s.docType) && (
+            <div style={{ border: '1px solid var(--border2)', borderRadius: 9, overflow: 'hidden' }}>
+              <div style={{ padding: '11px 13px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>生成模式</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>用户手册 / 设计说明书内容如何生成</div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', background: 'var(--green-soft)', padding: '1px 6px', borderRadius: 4 }}>PRO</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {([
+                    { value: 'offline', label: '全离线分析', sub: '静态扫描模块/依赖/技术栈，代码不出本机', icon: '🖥' },
+                    { value: 'ai', label: 'AI 生成', sub: '发送清洗后代码给自备 LLM，生成全文草稿', icon: '✨' },
+                  ] as const).map((mode) => {
+                    const active = s.genMode === mode.value;
+                    const locked = mode.value === 'ai' && !proActive;
+                    const pick = () => {
+                      if (locked) { s.set({ licenseOpen: true }); return; }
+                      s.set({ genMode: mode.value });
+                    };
+                    return (
+                      <button key={mode.value} type="button" onClick={pick}
+                        style={{ textAlign: 'left', padding: '9px 11px', border: `1px solid ${active ? 'var(--accent)' : 'var(--border2)'}`, borderRadius: 8, background: active ? 'var(--accent-soft, var(--panel2))' : 'var(--panel2)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3, opacity: locked && !active ? 0.82 : 1 }}>
+                        <span style={{ fontSize: 12.5, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 13 }}>{mode.icon}</span>{mode.label}
+                          {locked && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', padding: '1px 5px', borderRadius: 4 }}>PRO</span>}
+                        </span>
+                        <span style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.45 }}>{mode.sub}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {s.genMode === 'ai' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <div style={{ fontSize: 11, color: 'var(--orange)', background: 'var(--orange-soft)', padding: '8px 10px', borderRadius: 7, lineHeight: 1.5 }}>
+                      ⚠ AI 模式会把你项目的「已清洗、已脱敏代码」发送到你配置的 LLM 服务，请确认你信任该服务商。仍希望代码完全不出本机？请选择「全离线分析」。服务配置在「设置 → AI 生成」。
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <button className="btn-primary" type="button" disabled={s.aiGenerating || !s.swName.trim()}
+                        onClick={async () => {
+                          if (!s.processData) await runProcess();
+                          await generateAiDraft();
+                        }}
+                        style={{ height: 34, fontSize: 12.5, borderRadius: 8, padding: '0 14px' }}>
+                        {s.aiGenerating ? 'AI 生成中…' : s.aiDraft ? '重新生成草稿' : '生成 AI 草稿'}
+                      </button>
+                      {s.aiDraft && (
+                        <button className="btn-ghost" type="button" onClick={() => s.set({ aiDraftOpen: !s.aiDraftOpen })}
+                          style={{ height: 34, fontSize: 12.5, borderRadius: 8, padding: '0 12px', color: 'var(--text)' }}>
+                          {s.aiDraftOpen ? '收起审校 ▲' : '审校草稿 ▼'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {s.genMode === 'ai' && s.aiDraftOpen && s.aiDraft && (
+                <div style={{ borderTop: '1px solid var(--border2)' }}>
+                  <div style={{ padding: '9px 13px', fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'var(--panel2)' }}>
+                    AI 草稿审校（可直接编辑，导出时将使用此内容）
+                  </div>
+                  <textarea value={s.aiDraft}
+                    onChange={(e) => s.set({ aiDraft: e.target.value })}
+                    spellCheck={false}
+                    style={{ width: '100%', minHeight: 220, maxHeight: 360, resize: 'vertical', border: 0, outline: 'none', padding: '10px 13px', fontFamily: 'var(--mono)', fontSize: 11.5, lineHeight: 1.65, background: 'var(--panel)', color: 'var(--text)', boxSizing: 'border-box' }}
+                    aria-label="AI 草稿审校编辑框" />
+                  <div style={{ padding: '7px 13px', fontSize: 11, color: 'var(--text3)' }}>
+                    支持 Markdown 子集：# 一级标题 / ## 二级标题 / - 列表 / 普通段落；建议导出前通读确认无虚构内容。
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ border: '1px solid var(--border2)', borderRadius: 9, overflow: 'hidden' }}>
             <button type="button" className="step3-layout-toggle" aria-expanded={s.metaOpen} aria-controls="step3-metadata-fields"

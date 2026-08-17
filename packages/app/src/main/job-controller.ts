@@ -1,4 +1,4 @@
-export type JobKind = 'scan' | 'process' | 'export';
+export type JobKind = 'scan' | 'process' | 'export' | 'ai';
 
 export class JobCancelledError extends Error {
   constructor(message = '任务已取消') {

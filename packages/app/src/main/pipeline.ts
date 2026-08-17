@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   CONFIG_SCHEMA_VERSION, DEFAULT_EXCLUDES, DEFAULT_EXTENSIONS, RULES_VERSION,
-  discoverAsync, extractFromReadme, processFilesAsync, renderTxtAsync, sortFiles,
+  analyzeProject, discoverAsync, extractFromReadme, processFilesAsync, renderTxtAsync, sortFiles,
 } from '@codescribe/core';
 import type {
   CleanedFile, CleanOptions, DocumentType, FileCandidate, FileEntry, Metadata,
@@ -22,6 +22,10 @@ import { ScanSessionGuard } from './scan-session';
 import {
   loadScanExcludeSnapshot, registerScanExcludesIpc, SCAN_EXCLUDES_CONFIG_NAME,
 } from './scan-excludes-config';
+import {
+  AI_CONFIG_CHANNELS, AI_CONFIG_NAME, loadAiConfig, registerAiConfigIpc,
+} from './ai-config';
+import { generateAiDraft, testAiConnection } from './ai-service';
 import {
   registerRecentProjectsIpc, touchRecentProject, type RecentProjectPatch,
 } from './recent-projects';
@@ -69,6 +73,7 @@ export async function shutdownPipeline(): Promise<void> {
 
 const recentFile = () => path.join(app.getPath('userData'), 'recent.json');
 const scanExcludesFile = () => path.join(app.getPath('userData'), SCAN_EXCLUDES_CONFIG_NAME);
+const aiConfigFile = () => path.join(app.getPath('userData'), AI_CONFIG_NAME);
 
 interface VersionMeta {
   appVersion: string;
@@ -175,6 +180,8 @@ interface ProcessPayload {
   docType?: DocumentType;
   metadata?: Metadata;
   clean: CleanOptions;
+  /** AI 生成的草稿文本；存在时 user-manual / design-spec 直接渲染草稿 */
+  aiDraft?: string;
 }
 
 function buildConfig(payload: ProcessPayload): ProjectConfig {
@@ -315,6 +322,68 @@ async function previewWithWorker(entry: FileEntry | undefined, clean: CleanOptio
   }
 }
 
+/** 静态分析摘要（供 AI 提示词使用，不含原始代码） */
+function buildAnalysisSummary(entries: FileEntry[], root: string): string {
+  try {
+    const analysis = analyzeProject(entries, root);
+    const parts: string[] = [];
+    parts.push(`模块清单：${analysis.modules.slice(0, 20).map((m) => `${m.name}(${m.files.length} 文件/${m.codeLines} 行)`).join('、')}`);
+    if (analysis.entryFiles.length > 0) parts.push(`入口文件：${analysis.entryFiles.slice(0, 5).join('、')}`);
+    if (analysis.techStack.length > 0) parts.push(`技术栈：${analysis.techStack.slice(0, 12).join('、')}`);
+    const symbols = analysis.symbols.slice(0, 40).map((s) => s.name);
+    if (symbols.length > 0) parts.push(`关键符号：${symbols.join('、')}`);
+    const flows = analysis.modules.filter((m) => m.dependencies.length > 0).slice(0, 12)
+      .map((m) => `${m.name}→${m.dependencies.slice(0, 6).join('、')}`);
+    if (flows.length > 0) parts.push(`依赖关系：${flows.join('；')}`);
+    return parts.join('\n');
+  } catch {
+    return '（静态分析不可用）';
+  }
+}
+
+/**
+ * 提取已清洗代码片段（按入口优先排序，截断到 limit 行），
+ * 作为 AI 生成的输入。行内容为纯文本，不含敏感信息保留判断——由清洗管线负责脱敏。
+ */
+function buildCodeSnippet(cleaned: CleanedFile[], limit = 8_000): string {
+  const out: string[] = [];
+  for (const file of cleaned) {
+    if (out.length >= limit) break;
+    out.push(`// ─── ${file.entry.relPath} ───`);
+    for (const line of file.lines) {
+      if (out.length >= limit) break;
+      out.push(line);
+    }
+  }
+  return out.slice(0, limit).join('\n');
+}
+
+interface AiGeneratePayload extends ProcessPayload {
+  docType: 'user-manual' | 'design-spec';
+}
+
+async function generateAiDraftWithWorkers(payload: AiGeneratePayload, job: JobHandle): Promise<string> {
+  const entries = orderedEntries(payload);
+  const workerResources = getResources();
+  const cleanResult = await processFilesAsync(entries, buildConfig(payload), {
+    concurrency: workerResources.workerCount * 2,
+    signal: job.signal,
+    cleanEntry: async (entry, config, signal) => {
+      const result = await workerResources.pipeline.run({ type: 'clean', entry, clean: config.clean }, signal);
+      return result as CleanedFile;
+    },
+  });
+  const config = loadAiConfig(aiConfigFile()).config;
+  const snippet = buildCodeSnippet(cleanResult.cleaned);
+  return generateAiDraft({
+    config,
+    docType: payload.docType,
+    metadata: { ...(payload.metadata ?? {}) },
+    analysisSummary: buildAnalysisSummary(entries, payload.root),
+    codeSnippet: snippet,
+  });
+}
+
 export function registerPipelineIpc() {
   ipcMain.handle('dialog:pickFolder', async () => {
     const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
@@ -338,7 +407,28 @@ export function registerPipelineIpc() {
 
   registerRecentProjectsIpc(ipcMain, recentFile);
   registerScanExcludesIpc(ipcMain, scanExcludesFile);
+  registerAiConfigIpc(ipcMain, aiConfigFile);
   ipcMain.handle('project:cancel', (_event, jobId: string) => jobs.cancel(jobId));
+
+  ipcMain.handle('ai:testConnection', async () => {
+    const { config } = loadAiConfig(aiConfigFile());
+    return testAiConnection(config);
+  });
+
+  ipcMain.handle('ai:generate', async (event, request: JobRequest<AiGeneratePayload>) => {
+    const job = jobs.start(request.jobId, 'ai');
+    try {
+      const status = getLicenseStatus();
+      const allowed = status.state === 'active' && status.features.includes('pro');
+      if (!allowed) throw new Error('AI 生成属于 Pro 功能，请先激活 CodeScribe Pro');
+      requireCurrentScan(request.payload.root, request.payload.scanSessionId);
+      const draft = await generateAiDraftWithWorkers(request.payload, job);
+      job.assertCurrent();
+      return { jobId: job.id, draft };
+    } finally {
+      jobs.finish(job.id);
+    }
+  });
 
   ipcMain.handle('project:scan', (event, request: ScanRequest) => scanWithWorkers(request, event.sender));
 
@@ -418,6 +508,8 @@ export function registerPipelineIpc() {
         docType: request.payload.docType,
         metadata: request.payload.metadata,
         root: request.payload.root,
+        analysis: analyzeProject(entries, request.payload.root),
+        aiDraft: request.payload.aiDraft,
         // 用户手册等模板文档需要 README 素材
         extracted: request.payload.docType === 'user-manual' ? extractFromReadme(request.payload.root) : undefined,
       };

@@ -40,6 +40,7 @@ export default function Step5Export() {
         clean: cleanOptions(s.clean),
         docType: s.docType,
         metadata: s.metadata,
+        aiDraft: s.genMode === 'ai' ? s.aiDraft : undefined,
         outDir: s.outDir || `${s.root}/软著申报`,
         formats: { docx: s.fmtDocx, txt: s.fmtTxt },
       }, jobId);

@@ -6,6 +6,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { DocumentType, Metadata, Page } from './types.ts';
 import type { ExtractedManual } from './features.ts';
+import type { ProjectAnalysis } from './analyze.ts';
 import { getDocxBuilder, registerDocxBuilder } from './render-registry.ts';
 
 export interface RenderOptions {
@@ -22,6 +23,10 @@ export interface RenderOptions {
   extracted?: ExtractedManual;
   /** 项目根目录（供 design-spec 扫描模块清单） */
   root?: string;
+  /** 预计算的静态分析结果（供 design-spec 填充真实数据） */
+  analysis?: ProjectAnalysis;
+  /** AI 生成的草稿文本（提供时 user-manual / design-spec 直接用草稿渲染） */
+  aiDraft?: string;
 }
 
 /**
