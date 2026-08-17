@@ -4,11 +4,20 @@
 
 ## 安装
 
+CLI 为自包含单文件（仅依赖 Node.js 运行时），通过 GitHub Releases 分发：
+
 ```bash
-npm i -g @codescribe/cli
-# 或 npx 免安装：
-npx @codescribe/cli scrub <file>
+# 1. 下载发布资产 codescribe-cli.mjs（见 Releases 页）
+# 2. 用 Node.js 直接运行
+node codescribe-cli.mjs scrub src/config.ts
+
+# 可选：放入 PATH 以全局使用
+mkdir -p ~/.local/bin && cp codescribe-cli.mjs ~/.local/bin/codescribe
+chmod +x ~/.local/bin/codescribe
+codescribe scrub src/config.ts
 ```
+
+> 尚无 npm 账号，暂未发布到 npm；`npm i -g @codescribe/cli` 需等发布后可用。
 
 ## 用法
 

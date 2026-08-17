@@ -7,12 +7,14 @@
     "codescribe": "dist/cli.mjs",
     "codescribe-cli": "dist/cli.mjs"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
-    "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --outfile=dist/cli.mjs --external:esbuild && chmod +x dist/cli.mjs",
+    "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --outfile=dist/cli.mjs --external:esbuild && chmod +x dist/cli.mjs && cp dist/cli.mjs dist/codescribe-cli.mjs && chmod +x dist/codescribe-cli.mjs",
     "test": "tsx test/scrub.test.ts"
   },
   "dependencies": {

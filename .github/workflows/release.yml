@@ -69,6 +69,11 @@ jobs:
             script: dist:win:x64
             artifact: codescribe-windows-x64
             path: packages/app/release/CodeScribe-*-win-x64.exe
+          - label: CLI (Node)
+            runner: ubuntu-latest
+            script: build
+            artifact: codescribe-cli
+            path: packages/cli/dist/codescribe-cli.mjs
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
@@ -85,7 +90,13 @@ jobs:
         run: npm ci
 
       - name: Build installer
-        run: npm run ${{ matrix.script }}
+        run: |
+          if [ "${{ matrix.label }}" == 'CLI (Node)' ]; then
+            npm run build -w @codescribe/cli
+          else
+            npm run ${{ matrix.script }}
+          fi
+        shell: bash
 
       - name: Smoke test Windows application
         if: matrix.label == 'Windows x64'
@@ -102,6 +113,12 @@ jobs:
           } finally {
             Get-Process CodeScribe -ErrorAction SilentlyContinue | Stop-Process -Force
           }
+
+      - name: Smoke test CLI
+        if: matrix.label == 'CLI (Node)'
+        run: |
+          printf 'const key = "sk-test-123";\nconst x = 1;\n' > /tmp/cli-smoke.ts
+          node packages/cli/dist/codescribe-cli.mjs scrub /tmp/cli-smoke.ts | grep 'sk-te\*\*\*\*'
 
       - name: Upload installer
         uses: actions/upload-artifact@v7
@@ -129,7 +146,7 @@ jobs:
 
       - name: Generate SHA-256 checksums
         working-directory: release-assets
-        run: sha256sum CodeScribe-* > SHA256SUMS.txt
+        run: sha256sum CodeScribe-* codescribe-cli.mjs > SHA256SUMS.txt
 
       - name: Create GitHub Release
         env:
