@@ -6,7 +6,8 @@ import {
   discoverAsync, processFilesAsync, renderTxtAsync, sortFiles,
 } from '@codescribe/core';
 import type {
-  CleanedFile, CleanOptions, FileCandidate, FileEntry, PipelineProgress, ProjectConfig,
+  CleanedFile, CleanOptions, DocumentType, FileCandidate, FileEntry, Metadata,
+  PipelineProgress, ProjectConfig,
 } from '@codescribe/core';
 import { JobController, type JobHandle, type JobKind } from './job-controller';
 import { assertExportableSelection } from './export-guard';
@@ -170,6 +171,8 @@ interface ProcessPayload {
   title: string;
   owner?: string;
   foundedDate?: string;
+  docType?: DocumentType;
+  metadata?: Metadata;
   clean: CleanOptions;
 }
 
@@ -179,6 +182,8 @@ function buildConfig(payload: ProcessPayload): ProjectConfig {
     title: payload.title,
     owner: payload.owner,
     foundedDate: payload.foundedDate,
+    docType: payload.docType,
+    metadata: payload.metadata,
     extensions: DEFAULT_EXTENSIONS,
     excludes: DEFAULT_EXCLUDES,
     sortMode: 'manual',
@@ -403,6 +408,7 @@ export function registerPipelineIpc() {
         fontName: 'SimSun',
         fontSizePt: 10.5,
         outDir: request.payload.outDir,
+        docType: request.payload.docType,
       };
       const formatCount = Number(request.payload.formats.docx) + Number(request.payload.formats.txt);
       let rendered = 0;

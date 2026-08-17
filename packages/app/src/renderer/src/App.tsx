@@ -58,6 +58,7 @@ export default function App() {
       title: s.swName, owner: s.owner, sortMode: s.sortMode,
       order: s.order, excludedRelPaths: s.files.filter((f) => !f.included).map((f) => f.relPath),
       clean: s.clean, fmtDocx: s.fmtDocx, fmtTxt: s.fmtTxt, outDir: s.outDir,
+      docType: s.docType, metadata: s.metadata,
     });
     toast('配置已保存到项目（.codescribe.json）');
   };

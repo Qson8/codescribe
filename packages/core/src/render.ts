@@ -4,7 +4,8 @@ import {
 } from 'docx';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { Page } from './types.ts';
+import type { DocumentType, Page } from './types.ts';
+import { getDocxBuilder, registerDocxBuilder } from './render-registry.ts';
 
 export interface RenderOptions {
   title: string;
@@ -12,6 +13,8 @@ export interface RenderOptions {
   fontSizePt: number; // 10.5
   outDir: string;
   baseName?: string;
+  /** 文档类型，默认 source-program；见 renderDocx */
+  docType?: DocumentType;
 }
 
 /**
@@ -20,7 +23,7 @@ export interface RenderOptions {
  * - 每行一个段落，固定行距（Exactly），字体宋体 10.5pt
  * - 每页 linesPerPage 行后显式分页（pageBreakBefore），不依赖排版凑页
  */
-export async function renderDocx(pages: Page[], opts: RenderOptions): Promise<string> {
+async function renderSourceProgramDocx(pages: Page[], opts: RenderOptions): Promise<string> {
   const sizeHalfPt = Math.round(opts.fontSizePt * 2);
   const lineTwips = Math.round(opts.fontSizePt * 20); // 固定行距 = 字号
   const font = { name: opts.fontName, eastAsia: opts.fontName } as const;
@@ -88,3 +91,19 @@ export async function renderTxtAsync(pages: Page[], opts: RenderOptions): Promis
 function sanitize(name: string): string {
   return name.replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || '未命名';
 }
+
+/**
+ * 按文档类型生成 docx。默认 source-program，调用方未显式传类型时行为与旧版完全一致。
+ * 未注册的文档类型回退到源程序渲染。
+ */
+export async function renderDocx(
+  pages: Page[],
+  opts: RenderOptions,
+  docType?: DocumentType,
+): Promise<string> {
+  const type = docType ?? opts.docType ?? 'source-program';
+  const builder = getDocxBuilder(type);
+  return builder ? builder(pages, opts) : renderSourceProgramDocx(pages, opts);
+}
+
+registerDocxBuilder('source-program', renderSourceProgramDocx);

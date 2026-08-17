@@ -1,12 +1,33 @@
 import { useEffect } from 'react';
 import { runProcess, useStore, type CleanToggles } from '../store';
 import { unlockStep } from '../wizard-progress';
+import type { DocumentType, Metadata } from '@codescribe/core';
 
 const TOGGLES: Array<{ key: keyof CleanToggles; label: string; sub?: string }> = [
   { key: 'removeComments', label: '删除注释' },
   { key: 'removeBlankLines', label: '删除空行' },
   { key: 'maskSensitive', label: '敏感信息脱敏', sub: 'API 密钥 / 密码 / 内网 IP / 手机号' },
   { key: 'wrapLongLines', label: '超长行自动折行' },
+];
+
+const DOC_TYPES: Array<{ value: DocumentType; label: string; sub: string }> = [
+  { value: 'source-program', label: '源程序', sub: '鉴别材料（每页 50 行）' },
+  { value: 'user-manual', label: '用户手册', sub: 'P1 即将上线' },
+  { value: 'design-spec', label: '设计说明书', sub: 'P2 规划中' },
+  { value: 'application-form', label: '登记申请表', sub: 'P2 规划中' },
+];
+
+const METADATA_FIELDS: Array<{ key: keyof Metadata; label: string; placeholder?: string; hint?: string; date?: boolean }> = [
+  { key: 'softwareName', label: '软件全称', placeholder: '与申请表完全一致' },
+  { key: 'version', label: '版本号', placeholder: '如 1.0' },
+  { key: 'shortName', label: '软件简称', placeholder: '选填' },
+  { key: 'owner', label: '著作权人', placeholder: '选填，可复用上方著作权人' },
+  { key: 'foundedDate', label: '著作权人成立日期', date: true },
+  { key: 'completedDate', label: '开发完成日期', date: true },
+  { key: 'publishedDate', label: '首次发表日期', date: true },
+  { key: 'languages', label: '开发语言', placeholder: '如 TypeScript、Java，逗号分隔' },
+  { key: 'environment', label: '开发环境 / 运行平台', placeholder: '如 Windows 11 / Linux 服务器' },
+  { key: 'description', label: '软件功能简介', placeholder: '概述功能用途' },
 ];
 
 export default function Step3Clean() {
@@ -31,6 +52,49 @@ export default function Step3Clean() {
             <input className="cs-input" value={s.owner} placeholder="如：某某科技有限公司（用于署名冲突扫描）"
               onChange={(e) => s.set({ owner: e.target.value })} />
             <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5 }}>代码中出现与此不一致的 @author / Copyright 会在校验时提示</div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 7 }}>文档类型</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {DOC_TYPES.map((t) => {
+                const active = s.docType === t.value;
+                return (
+                  <button key={t.value} type="button" onClick={() => { s.set({ docType: t.value, processData: null }); }}
+                    style={{ textAlign: 'left', padding: '10px 12px', border: `1px solid ${active ? 'var(--accent)' : 'var(--border2)'}`, borderRadius: 9, background: active ? 'var(--accent-soft, var(--panel2))' : 'var(--panel2)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text)' }}>{t.label}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>{t.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ border: '1px solid var(--border2)', borderRadius: 9, overflow: 'hidden' }}>
+            <button type="button" className="step3-layout-toggle" aria-expanded={s.metaOpen} aria-controls="step3-metadata-fields"
+              onClick={() => s.set({ metaOpen: !s.metaOpen })}>
+              <div style={{ fontSize: 13, fontWeight: 500 }}>软著申报元数据</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>用于用户手册 / 设计说明书 / 申请表</span>
+                <span style={{ fontSize: 11, color: 'var(--text3)', transform: `rotate(${s.metaOpen ? 180 : 0}deg)`, transition: 'transform .15s' }}>▼</span>
+              </div>
+            </button>
+            {s.metaOpen && (
+              <div id="step3-metadata-fields" style={{ padding: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, borderTop: '1px solid var(--border2)' }}>
+                {METADATA_FIELDS.map((f) => (
+                  <div key={f.key} style={f.date ? { gridColumn: '1 / -1' } : undefined}>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>{f.label}</div>
+                    <input className="cs-input" type={f.date ? 'date' : 'text'}
+                      value={s.metadata[f.key] ?? ''}
+                      placeholder={f.placeholder}
+                      onChange={(e) => s.set({ metadata: { ...s.metadata, [f.key]: e.target.value }, processData: null })} />
+                  </div>
+                ))}
+                <div style={{ gridColumn: '1 / -1', fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>
+                  这些字段将随项目保存到 .codescribe.json，供各文档模板复用；源程序鉴别材料只需软件全称与版本号
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

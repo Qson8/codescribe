@@ -1,5 +1,10 @@
 export * from './types.ts';
 export {
+  DOC_TYPE_LABELS, DOC_TYPE_REQUIRED_METADATA, DEFAULT_DOC_TYPE,
+  isDocumentType, missingMetadata, splitTitle, buildHeaderTitle, validateMetadataFor,
+} from './doc-type.ts';
+export { registerDocxBuilder, getDocxBuilder } from './render-registry.ts';
+export {
   discover, discoverAsync, sortFiles, readSource, readSourceAsync, scanFileCandidate,
   langOf, entryScore, countLines, MAX_FILE_BYTES,
   type DiscoverAsyncOptions, type DiscoverResult, type FileCandidate,

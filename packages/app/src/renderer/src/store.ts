@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { UpdateCheckResult } from '../../shared/update-types';
+import type { DocumentType, Metadata } from '@codescribe/core';
 import { mergeRescannedFiles } from './scan-project-state';
 import { canStartScan } from './scan-guard';
 import { LatestRequestGuard } from './latest-request-guard';
@@ -65,6 +66,7 @@ interface ScanResult {
     order?: string[]; excludedRelPaths?: string[];
     clean?: CleanToggles;
     fmtDocx?: boolean; fmtTxt?: boolean; outDir?: string;
+    docType?: DocumentType; metadata?: Metadata;
   };
 }
 
@@ -101,6 +103,9 @@ interface State {
   sortMode: 'entry' | 'mtime' | 'manual';
   swName: string;
   owner: string;
+  docType: DocumentType;
+  metadata: Metadata;
+  metaOpen: boolean;
   clean: CleanToggles;
   layoutOpen: boolean;
   processData: ProcessData | null;
@@ -141,6 +146,9 @@ export const useStore = create<State>((set) => ({
   sortMode: 'entry',
   swName: '',
   owner: '',
+  docType: 'source-program',
+  metadata: {},
+  metaOpen: false,
   clean: DEFAULT_CLEAN,
   layoutOpen: false,
   processData: null,
@@ -303,6 +311,8 @@ export async function scanProject(root: string, intent: ScanIntent): Promise<voi
     let sortMode: State['sortMode'];
     let swName: string;
     let owner: string;
+    let docType: State['docType'];
+    let metadata: Metadata;
     let clean: CleanToggles;
     let fmtDocx: boolean;
     let fmtTxt: boolean;
@@ -315,6 +325,8 @@ export async function scanProject(root: string, intent: ScanIntent): Promise<voi
       sortMode = previous.sortMode;
       swName = previous.swName;
       owner = previous.owner;
+      docType = previous.docType;
+      metadata = previous.metadata;
       clean = previous.clean;
       fmtDocx = previous.fmtDocx;
       fmtTxt = previous.fmtTxt;
@@ -331,6 +343,8 @@ export async function scanProject(root: string, intent: ScanIntent): Promise<voi
       sortMode = config?.sortMode ?? 'entry';
       swName = config?.title ?? '';
       owner = config?.owner ?? '';
+      docType = config?.docType ?? 'source-program';
+      metadata = config?.metadata ?? {};
       clean = config?.clean ?? DEFAULT_CLEAN;
       fmtDocx = config?.fmtDocx ?? true;
       fmtTxt = config?.fmtTxt ?? false;
@@ -356,6 +370,8 @@ export async function scanProject(root: string, intent: ScanIntent): Promise<voi
       sortMode,
       swName,
       owner,
+      docType,
+      metadata,
       clean,
       fmtDocx,
       fmtTxt,
@@ -414,6 +430,8 @@ export async function runProcess() {
       orderedRelPaths: orderedIncluded(s).map((f) => f.relPath),
       title: s.swName,
       owner: s.owner || undefined,
+      docType: s.docType,
+      metadata: s.metadata,
       clean: cleanOptions(s.clean),
     }, jobId)) as ProcessData;
     if (useStore.getState().activeJobId !== jobId || data.scanSessionId !== scanSessionId) return;

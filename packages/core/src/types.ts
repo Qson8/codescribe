@@ -8,6 +8,33 @@ export interface CleanOptions {
   tabWidth: number;
 }
 
+/** 文档类型：源程序 / 用户手册 / 设计说明书 / 申请表 */
+export type DocumentType = 'source-program' | 'user-manual' | 'design-spec' | 'application-form';
+
+/** 软著申报所需的共享元数据，各文档类型按需取用；所有字段均可选，由 doc-type 的必填校验按类型约束 */
+export interface Metadata {
+  /** 软件全称 */
+  softwareName?: string;
+  /** 软件版本号（不含前缀 v） */
+  version?: string;
+  /** 软件简称 */
+  shortName?: string;
+  /** 著作权人名称 */
+  owner?: string;
+  /** 著作权人成立日期 YYYY-MM-DD */
+  foundedDate?: string;
+  /** 开发完成日期 YYYY-MM-DD */
+  completedDate?: string;
+  /** 首次发表日期 YYYY-MM-DD */
+  publishedDate?: string;
+  /** 开发语言，逗号分隔 */
+  languages?: string;
+  /** 开发环境/平台说明 */
+  environment?: string;
+  /** 软件功能简介 */
+  description?: string;
+}
+
 export interface ProjectConfig {
   root: string;
   /** 软件全称+版本号，用作页眉，必须与申请表一致 */
@@ -16,6 +43,10 @@ export interface ProjectConfig {
   owner?: string;
   /** 著作权人成立日期 YYYY-MM-DD，早于该日期的文件 mtime 会被警告 */
   foundedDate?: string;
+  /** 要生成的文档类型，默认 source-program */
+  docType?: DocumentType;
+  /** 软著申报共享元数据 */
+  metadata?: Metadata;
   extensions: string[];
   excludes: string[];
   sortMode: 'entry' | 'mtime' | 'manual';

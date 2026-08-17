@@ -1,5 +1,5 @@
 import type {
-  AnnotatedLine, CleanedFile, CleanOptions, FileCandidate, FileEntry, Page, RenderOptions,
+  AnnotatedLine, CleanedFile, CleanOptions, DocumentType, FileCandidate, FileEntry, Page, RenderOptions,
 } from '@codescribe/core';
 
 export interface PreviewResult {
