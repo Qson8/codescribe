@@ -25,8 +25,9 @@ assert.ok(manualPath.endsWith('.docx'));
 assert.notEqual(manualPath, defaultPath);
 assert.ok(fs.statSync(manualPath).size > 5_000);
 
-// 4. 未注册类型（application-form）回退源程序
-const fallbackPath = await renderDocx(pages, opts, 'application-form');
+// 4. 未注册类型回退源程序（用未注册的未知类型名测试回退逻辑）
+const unknownType = 'unknown-type' as Parameters<typeof renderDocx>[2];
+const fallbackPath = await renderDocx(pages, opts, unknownType);
 assert.equal(fallbackPath, defaultPath);
 
 // 5. 注册自定义 builder 后按类型分发

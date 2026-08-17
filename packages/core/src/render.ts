@@ -20,6 +20,8 @@ export interface RenderOptions {
   metadata?: Metadata;
   /** 从 README 提取的素材（供 user-manual 使用） */
   extracted?: ExtractedManual;
+  /** 项目根目录（供 design-spec 扫描模块清单） */
+  root?: string;
 }
 
 /**

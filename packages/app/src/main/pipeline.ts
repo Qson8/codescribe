@@ -410,6 +410,7 @@ export function registerPipelineIpc() {
         outDir: request.payload.outDir,
         docType: request.payload.docType,
         metadata: request.payload.metadata,
+        root: request.payload.root,
         // 用户手册等模板文档需要 README 素材
         extracted: request.payload.docType === 'user-manual' ? extractFromReadme(request.payload.root) : undefined,
       };

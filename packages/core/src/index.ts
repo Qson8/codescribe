@@ -6,6 +6,8 @@ export {
 export { registerDocxBuilder, getDocxBuilder } from './render-registry.ts';
 export { extractFromReadme, type ExtractedManual, type ManualSection } from './features.ts';
 export { buildUserManual, type UserManualInput } from './user-manual.ts';
+export { buildDesignSpec, type DesignSpecInput } from './design-spec.ts';
+export { buildApplicationForm, type ApplicationFormInput } from './application-form.ts';
 export {
   discover, discoverAsync, sortFiles, readSource, readSourceAsync, scanFileCandidate,
   langOf, entryScore, countLines, MAX_FILE_BYTES,
