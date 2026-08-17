@@ -65,7 +65,8 @@
     "dist:mac:x64": "npm run build && electron-builder --mac dmg --x64 --publish never",
     "dist:mac:arm64": "npm run build && electron-builder --mac dmg --arm64 --publish never",
     "dist:win:x64": "npm run build && electron-builder --win nsis --x64 --publish never",
-    "start": "electron-vite preview"
+    "start": "electron-vite preview",
+    "issue-code": "tsx scripts/issue-license.ts"
   },
   "dependencies": {
     "chardet": "^2.0.0",
