@@ -4,7 +4,8 @@ import {
   canResetScanExcludeRules, getScanExcludeRuleErrors, normalizeScanExcludeRule, normalizeScanExcludeRules,
   sameScanExcludeRules, validateScanExcludeRule,
 } from '../scan-exclude-rules';
-import { checkForUpdates, toast, useStore } from '../store';
+import { checkForUpdates, isPro, toast, useStore } from '../store';
+import LicenseModal from './LicenseModal';
 
 const LINKS = {
   author: 'https://github.com/Qson8',
@@ -325,7 +326,12 @@ export default function Settings() {
               </p>
 
               <div className="about-card__meta">
-                <span className="about-card__free"><span aria-hidden="true" />免费软件</span>
+                <span className="about-card__free"><span aria-hidden="true" />{isPro(s.license) ? 'Pro 已激活' : '免费版'}</span>
+                <button type="button" className="about-card__text-link"
+                  onClick={() => s.set({ licenseOpen: true })} aria-label="管理 Pro 授权">
+                  {isPro(s.license) ? '管理 Pro' : '升级 Pro'}
+                  <span aria-hidden="true">↗</span>
+                </button>
                 <button type="button" className="about-card__text-link"
                   onClick={() => window.cs.openExternal(LINKS.license)} aria-label="查看 Apache 2.0 许可证">
                   Apache-2.0 许可
@@ -387,6 +393,7 @@ export default function Settings() {
           </div>
         </div>
       )}
+      <LicenseModal />
     </div>
   );
 }

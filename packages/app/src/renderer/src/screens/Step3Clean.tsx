@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { isPro, runProcess, useStore, type CleanToggles } from '../store';
 import { unlockStep } from '../wizard-progress';
+import LicenseModal from './LicenseModal';
 import type { DocumentType, Metadata } from '@codescribe/core';
 
 const TOGGLES: Array<{ key: keyof CleanToggles; label: string; sub?: string }> = [
@@ -34,32 +35,10 @@ export default function Step3Clean() {
   const s = useStore();
   const p = s.processData;
   const progress = s.jobProgress?.jobKind === 'process' ? s.jobProgress : null;
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => { runProcess(); }, [s.clean]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const proActive = isPro(s.license);
-
-  const doActivate = async () => {
-    if (!code.trim()) { setErr('请输入激活码'); return; }
-    setBusy(true); setErr(null);
-    const res = await window.cs.licenseActivate(code.trim());
-    setBusy(false);
-    if (res.ok) {
-      s.set({ license: res.status, licenseOpen: false });
-    } else {
-      setErr(res.error);
-    }
-  };
-
-  const doDeactivate = async () => {
-    setBusy(true);
-    const status = await window.cs.licenseDeactivate();
-    setBusy(false);
-    s.set({ license: status });
-  };
 
   return (
     <div className="step3-clean">
@@ -239,34 +218,7 @@ export default function Step3Clean() {
         )}
       </div>
 
-      {/* Pro 激活弹窗 */}
-      {s.licenseOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,16,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(2px)' }} onClick={() => { if (!busy) s.set({ licenseOpen: false }); }}>
-          <div style={{ width: 420, maxWidth: 'calc(100vw - 48px)', background: 'var(--panel)', borderRadius: 16, boxShadow: '0 24px 64px rgba(0,0,0,.35)', padding: 26 }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>激活 CodeScribe Pro</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 16 }}>解锁用户手册 / 设计说明书 / 登记申请表导出，一次性买断 99–299 元。激活码请向码著官方索取。</div>
-            {proActive ? (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 9, background: 'var(--green-soft)', fontSize: 12.5, color: 'var(--green)', marginBottom: 14 }}>
-                  <span>✓</span>
-                  <span>已激活，授权给 <b>{s.license.state === 'active' ? s.license.licensee : ''}</b>{s.license.state === 'active' && s.license.expiresAt ? `（至 ${s.license.expiresAt}）` : '（永久）'}</span>
-                </div>
-                <button className="btn-primary" type="button" onClick={doDeactivate} disabled={busy} style={{ width: '100%', height: 40, borderRadius: 9, fontSize: 13 }}>{busy ? '处理中…' : '停用本机授权'}</button>
-              </div>
-            ) : (
-              <div>
-                <input className="cs-input" value={code} placeholder="粘贴激活码，如 CS.xxxx.yyyy" autoFocus
-                  onChange={(e) => setCode(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') void doActivate(); }}
-                  style={{ height: 40 }} />
-                {err && <div style={{ fontSize: 11.5, color: 'var(--red)', marginTop: 7 }}>{err}</div>}
-                <button className="btn-primary" type="button" onClick={doActivate} disabled={busy} style={{ width: '100%', height: 40, borderRadius: 9, fontSize: 13, marginTop: 12 }}>{busy ? '校验中…' : '激活'}</button>
-                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 10, lineHeight: 1.6 }}>未持有激活码？可在正式发布页面购买。本机激活仅存储在本机文件中，代码始终不出本机。</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <LicenseModal />
     </div>
   );
 }
