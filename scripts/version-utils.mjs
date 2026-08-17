@@ -9,9 +9,10 @@ export const PACKAGE_FILES = [
   'package.json',
   'packages/app/package.json',
   'packages/core/package.json',
+  'packages/cli/package.json',
 ];
 
-const LOCK_PACKAGES = ['', 'packages/app', 'packages/core'];
+const LOCK_PACKAGES = ['', 'packages/app', 'packages/core', 'packages/cli'];
 
 export function readJson(relPath) {
   return JSON.parse(fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8'));

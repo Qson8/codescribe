@@ -13,8 +13,8 @@
   ],
   "scripts": {
     "dev": "npm run dev -w @codescribe/app",
-    "build": "npm run build -w @codescribe/core && npm run build -w @codescribe/app",
-    "test": "npm run test -w @codescribe/core && npm run test -w @codescribe/app",
+    "build": "npm run build -w @codescribe/core && npm run build -w @codescribe/app && npm run build -w @codescribe/cli",
+    "test": "npm run test -w @codescribe/core && npm run test -w @codescribe/app && npm run test -w @codescribe/cli",
     "test:integration": "npm run test:workers -w @codescribe/app",
     "perf": "npm run build && npm run perf -w @codescribe/app",
     "icons:generate": "node scripts/gen-icons.mjs",
